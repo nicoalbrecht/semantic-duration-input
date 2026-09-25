@@ -98,13 +98,20 @@ describe('DurationInput styling', () => {
     expect(part(wrapper, 'preview').exists()).toBe(false)
   })
 
-  it('hides the preview when formatPreview returns null', async () => {
-    const wrapper = mount(DurationInput, { props: { preview: true, formatPreview: (s: number) => (s < 3600 ? null : 'long') } })
-    const input = wrapper.find('input')
-    await input.setValue('45 min')
-    expect(part(wrapper, 'preview').exists()).toBe(false)
-    await input.setValue('90 min')
-    expect(part(wrapper, 'preview').text()).toBe('long')
+  it('hides the preview when formatPreview returns null or an empty string', async () => {
+    const formatPreview = (s: number) => (s < 3600 ? null : s < 7200 ? '' : 'long')
+    let preview: string | null | undefined
+    const wrapper = mount(DurationInput, {
+      props: { preview: true, formatPreview },
+      slots: { default: (props: DurationInputSlotProps) => ((preview = props.preview), h('input', props.nativeInputProps)) },
+    })
+    const builtIn = mount(DurationInput, { props: { preview: true, formatPreview } })
+    for (const [text, expected] of [['45 min', null], ['90 min', null], ['3h 5m', 'long']] as const) {
+      await wrapper.find('input').setValue(text)
+      await builtIn.find('input').setValue(text)
+      expect(preview).toBe(expected)
+      expect(part(builtIn, 'preview').exists()).toBe(expected !== null)
+    }
   })
 
   it('passes the formatPreview output to the renderless slot', async () => {

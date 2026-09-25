@@ -60,7 +60,7 @@ With `preview`, the normalized value appears inside the field as you type (`= 1h
 
 <Demo preview :format-preview="(seconds, { value }) => `≈ ${(seconds / 3600).toFixed(1)} hours (${value} min)`" placeholder="Type 90m" />
 
-Its output is shown and announced as is, without the leading `= `. The preview still only appears while the text differs from its normalized form, so it goes away on blur. Return `null` to hide it for a value.
+Its output is shown and announced as is, without the leading `= `. The preview still only appears while the text differs from its normalized form, so it goes away on blur. Return `null` (or an empty string) to hide it for a value.
 
 `formatPreview` changes the `preview` slot prop and the `preview` of `useDurationInput` too. It only affects the preview: the text is still normalized with `displayStyle` and `displayUnits` on blur.
 

@@ -26,7 +26,7 @@ export interface PreviewContext {
   locale: DurationLocale
 }
 
-/** Renders the preview of a valid, non-empty text. Return `null` to hide it. */
+/** Renders the preview of a valid, non-empty text. Return `null` or `''` to hide it. */
 export type PreviewFormatter = (seconds: number, context: PreviewContext) => string | null
 
 /** Options of `useDurationInput`: the component's parsing, display and validation props. */
@@ -228,6 +228,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     const { formatPreview, valueFormat, locale } = settings.value
     if (!formatPreview) return normalized
     const value = toModelValue(result.seconds, valueFormat)
+    // An empty text hides the preview too, so `preview` is never `''`: there's nothing to show or announce.
     return formatPreview(result.seconds, { normalized, text: text.value, value, locale }) || null
   })
 

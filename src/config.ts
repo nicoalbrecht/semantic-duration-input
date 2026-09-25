@@ -108,7 +108,7 @@ export interface DurationInputProps {
   preview?: boolean
   /**
    * Renders the preview instead of the normalized text, e.g. `(seconds) => \`${seconds / 3600} hours\``.
-   * Its output is shown as is, without the leading "= ". Return `null` to hide the preview.
+   * Its output is shown as is, without the leading "= ". Return `null` or `''` to hide the preview.
    */
   formatPreview?: PreviewFormatter
   /** Overrides the error texts per key (`{min}`, `{max}`, `{token}`, `{suggestion}` are filled in), or `false` to hide them. */
