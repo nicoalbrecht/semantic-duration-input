@@ -38,7 +38,7 @@ const { text, error, preview, onInput, onBlur, onKeydown } = useDurationInput(se
 
 The first argument is the model ref. The second takes the component's parsing, display and validation options, as an object, ref or getter:
 
-`valueFormat`, `locales`, `locale`, `displayStyle`, `displayUnits`, `precision`, `implicitUnits`, `defaultUnit`, `required`, `min`, `max`, `step`, `snapToStep`, `clamp`, `validateOn`, `readonly`
+`valueFormat`, `locales`, `locale`, `displayStyle`, `displayUnits`, `precision`, `implicitUnits`, `defaultUnit`, `required`, `min`, `max`, `step`, `snapToStep`, `clamp`, `validateOn`, `readonly`, `formatPreview`
 
 It returns:
 
@@ -48,7 +48,7 @@ It returns:
 | `seconds` | The model value in seconds |
 | `error`, `errorDetail` | The shown error code, and the shown failure (see `validateOn`) |
 | `rawError`, `rawErrorDetail`, `isValid` | The current error and failure, shown or not, and whether there is none |
-| `preview` | The normalized text while it differs from what was typed |
+| `preview` | The normalized text (or the `formatPreview` output) while it differs from what was typed |
 | `settings` | Resolved options: bounds and step in seconds, locale, display units |
 | `format(seconds)` | Formats with the current locale and display options |
 | `onInput(event \| text \| null)` | Input handler; also takes the new text, or `null` to clear |

@@ -67,7 +67,7 @@ export interface DurationInputSlotProps {
   message: string | null
   /** Id to give your error element, for `aria-describedby`. */
   messageId: string
-  /** Normalized form of the text while it differs from what was typed, else `null`. */
+  /** Normalized form of the text (or `formatPreview`'s output) while it differs from what was typed, else `null`. */
   preview: string | null
   /** The resolved `presets`, to render your own suggestions. */
   presets: DurationPresetItem[]
@@ -112,6 +112,7 @@ const variant = setting('variant')
 const showPreview = setting('preview')
 const messages = setting('messages')
 const presets = setting('presets')
+const formatPreview = setting('formatPreview')
 
 const options = computed(() => ({
   locales: props.locales ?? defaults.locales,
@@ -130,11 +131,15 @@ const options = computed(() => ({
   max: props.max,
   required: props.required,
   readonly: props.readonly,
+  formatPreview: formatPreview.value,
 }))
 
 const duration = useDurationInput(model as Ref<unknown>, options)
 const { text, error, errorDetail, rawError, rawErrorDetail, preview, settings, onBlur, commit, validate, revert, stepBy } =
   duration
+
+/** A custom `formatPreview` controls the whole text, so the "= " only goes in front of the default preview. */
+const previewText = computed(() => (preview.value === null || formatPreview.value ? preview.value : `= ${preview.value}`))
 
 watch(error, (code) => emit('error', code))
 
@@ -247,10 +252,10 @@ function onKeydown(event: KeyboardEvent) {
 
 const announcement = ref('')
 let announceTimer: ReturnType<typeof setTimeout> | undefined
-watch(preview, (value) => {
+watch(previewText, (value) => {
   clearTimeout(announceTimer)
   if (!value) announcement.value = ''
-  else announceTimer = setTimeout(() => (announcement.value = `= ${value}`), 600)
+  else announceTimer = setTimeout(() => (announcement.value = value), 600)
 })
 onBeforeUnmount(() => clearTimeout(announceTimer))
 
@@ -445,7 +450,7 @@ defineExpose({
         @click="onFocusOrClick"
         @keydown="onKeydown"
       />
-      <span v-if="showPreview && preview" :class="classFor('preview')" data-slot="preview" aria-hidden="true">= {{ preview }}</span>
+      <span v-if="showPreview && previewText" :class="classFor('preview')" data-slot="preview" aria-hidden="true">{{ previewText }}</span>
       <span v-if="slots.trailing" :class="classFor('trailing')" data-slot="trailing"><slot name="trailing" /></span>
       <ul v-if="hasMenu" v-show="menuVisible" :id="listId" role="listbox" :class="classFor('menu')" data-slot="menu">
         <li

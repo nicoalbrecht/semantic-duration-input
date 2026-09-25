@@ -1,7 +1,7 @@
 import type { Component, InjectionKey } from 'vue'
 import type { ClassValue } from 'tailwind-variants'
 import type { InvalidPropsFn } from './adapters'
-import type { ValidateOn } from './composables/useDurationInput'
+import type { PreviewFormatter, ValidateOn } from './composables/useDurationInput'
 import type { FormatStyle } from './core/format'
 import type { DurationLocale } from './core/locale'
 import type { ErrorMessages } from './core/messages'
@@ -106,6 +106,11 @@ export interface DurationInputProps {
    * Built-in field only: with `as`, use the renderless slot's `preview` instead.
    */
   preview?: boolean
+  /**
+   * Renders the preview instead of the normalized text, e.g. `(seconds) => \`${seconds / 3600} hours\``.
+   * Its output is shown as is, without the leading "= ". Return `null` or `''` to hide the preview.
+   */
+  formatPreview?: PreviewFormatter
   /** Overrides the error texts per key (`{min}`, `{max}`, `{token}`, `{suggestion}` are filled in), or `false` to hide them. */
   messages?: ErrorMessages | false
 }
