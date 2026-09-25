@@ -1,10 +1,19 @@
 import type { UnitKey } from './units'
 
+/**
+ * Why input was rejected:
+ * - `empty`: nothing was entered, but a value is required.
+ * - `invalid_format`: the text isn't a duration at all.
+ * - `unknown_unit`: a number is followed by a word that isn't a unit name of the active locales.
+ * - `missing_unit`: a number has no unit, e.g. `45` without `defaultUnit`.
+ * - `out_of_range`: the duration is below `min` or above `max`.
+ */
 export type ParseErrorCode = 'empty' | 'invalid_format' | 'unknown_unit' | 'missing_unit' | 'out_of_range'
 
 /** Keys of a locale's messages: the error codes plus variants picked by `formatErrorMessage`. */
 export type MessageKey = ParseErrorCode | 'unknown_unit_suggestion' | 'out_of_range_min' | 'out_of_range_max'
 
+/** Unit names, separator words, display labels and error messages of one language. */
 export interface DurationLocale {
   /** BCP 47 code, used for `Intl.DurationFormat` when `labels` are missing. */
   code: string

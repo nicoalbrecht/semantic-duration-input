@@ -23,19 +23,25 @@ const props = withDefaults(defineProps<DurationInputProps>(), {
   step: undefined,
 })
 
+/** The duration, stored as set by `valueFormat` (minutes by default). `null` when empty. */
 const model = defineModel<number | string | null>({ default: null })
 
 const emit = defineEmits<{
+  /** The shown error changed (see `validateOn`). `null` when it was cleared. */
   error: [code: ParseErrorCode | null]
 }>()
 
+/** A resolved entry of `presets`. */
 export interface DurationPresetItem {
+  /** Element id of the option, for `aria-activedescendant`. */
   id: string
+  /** Text shown in the menu. */
   label: string
   /** Value in seconds. */
   seconds: number
 }
 
+/** Props of the default (renderless) slot. */
 export interface DurationInputSlotProps {
   /** Bind to a component with a `modelValue`/`update:modelValue` contract. Includes `$attrs`. */
   inputProps: Record<string, unknown>
@@ -43,6 +49,7 @@ export interface DurationInputSlotProps {
   nativeInputProps: Record<string, unknown>
   /** Bind to an `<input type="hidden">` for native form submission. `null` without a `name` attribute. */
   hiddenInputProps: Record<string, unknown> | null
+  /** The text in the field. */
   text: string
   /** The model value. */
   value: number | string | null
@@ -52,25 +59,38 @@ export interface DurationInputSlotProps {
   errorDetail: ParseFailure | null
   /** The current error, shown or not. */
   rawError: ParseErrorCode | null
+  /** Whether an error is shown. */
   invalid: boolean
+  /** Localized text of the shown error, or `null`. */
   message: string | null
   /** Id to give your error element, for `aria-describedby`. */
   messageId: string
+  /** Normalized form of the text while it differs from what was typed, else `null`. */
   preview: string | null
+  /** The resolved `presets`, to render your own suggestions. */
   presets: DurationPresetItem[]
+  /** Writes a preset's value and normalizes the text. */
   selectPreset: (preset: DurationPresetItem) => void
+  /** Normalizes the text, like blur. */
   onBlur: () => void
+  /** Keyboard handling: arrow/page stepping, Enter to commit, Escape to revert. */
   onKeydown: (event: KeyboardEvent) => void
+  /** Normalizes the text, shows any error and writes the value. Returns whether it was valid. */
   commit: () => boolean
+  /** Shows the current error and returns whether the text is valid. */
   validate: () => boolean
+  /** Goes back to the last committed state. Returns whether anything changed. */
   revert: () => boolean
+  /** Moves by `direction` steps of `size` seconds (default: `step`). */
   stepBy: (direction: number, size?: number) => void
 }
 
 const slots = defineSlots<{
   /** Renderless mode: render your own input with the given props. */
   default?: (props: DurationInputSlotProps) => unknown
+  /** Content before the input, e.g. an icon. */
   leading?: () => unknown
+  /** Content after the input, e.g. a unit hint or a clear button. */
   trailing?: () => unknown
   [name: string]: ((scope: any) => unknown) | undefined
 }>()
@@ -307,7 +327,9 @@ const slotProps = computed<DurationInputSlotProps>(() => ({
   onKeydown,
   commit,
   validate,
+  /** Goes back to the last committed state. Returns whether anything changed. */
   revert,
+  /** Moves by `direction` steps of `size` seconds (default: `step`), e.g. `stepBy(1)`. */
   stepBy,
 }))
 
@@ -347,7 +369,9 @@ function inputElement() {
   return el instanceof HTMLInputElement ? el : (el.querySelector('input') ?? undefined)
 }
 defineExpose({
+  /** Focuses the input. */
   focus: () => inputElement()?.focus(),
+  /** Blurs the input, which normalizes the text. */
   blur: () => inputElement()?.blur(),
   /** Normalizes the text and writes the value, like blur. */
   commit,

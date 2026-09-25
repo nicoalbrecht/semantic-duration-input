@@ -1,7 +1,10 @@
 import type { ParseErrorCode } from './core/parse'
 
+/** What an `invalidProps` function receives. */
 export interface InvalidState {
+  /** Whether an error is shown (see `validateOn`). */
   invalid: boolean
+  /** The shown error code. */
   error: ParseErrorCode | null
   /** Localized error text, or `null` when valid or when messages are disabled. */
   message: string | null
@@ -21,10 +24,10 @@ export const vuetify: InvalidPropsFn = ({ invalid, message, onBlur }) => ({
   },
 })
 
-/** PrimeVue `InputText`: `invalid`. */
+/** PrimeVue `InputText` and friends: `invalid`. */
 export const primevue: InvalidPropsFn = ({ invalid }) => ({ invalid })
 
-/** Nuxt UI `UInput`: error color + highlight. */
+/** Nuxt UI `UInput`: `color: 'error'` and `highlight` while invalid. */
 export const nuxtUi: InvalidPropsFn = ({ invalid }) => ({
   color: invalid ? 'error' : undefined,
   highlight: invalid || undefined,

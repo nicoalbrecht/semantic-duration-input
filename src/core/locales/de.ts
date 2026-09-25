@@ -1,5 +1,6 @@
 import { defineLocale } from '../locale'
 
+/** German unit names (`Std`, `Stunden`, `Tage`, ...), separator `und`, labels and messages. */
 export const de = defineLocale({
   code: 'de',
   aliases: {

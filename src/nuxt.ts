@@ -4,17 +4,22 @@ import type { DurationInputDefaults } from './config'
 const PACKAGE = 'semantic-duration-input'
 const PRESETS = ['nuxtUi', 'vuetify', 'primevue'] as const
 
+/** Options under the `durationInput` key in `nuxt.config`: the app-wide defaults, in serializable form. */
 export interface ModuleOptions extends Omit<DurationInputDefaults, 'as' | 'invalidProps' | 'valueFormat'> {
-  /** Name of a component to render instead of the built-in field, resolved from `#components`, e.g. `'UInput'`. */
+  /** Name of a component to render instead of the built-in field, resolved from `#components`, e.g. `'UInput'`. Must be a valid identifier. */
   as?: string
   /** One of the bundled `invalidProps` presets. */
   invalidProps?: (typeof PRESETS)[number]
+  /** How `v-model` stores durations. Custom conversions can't be serialized; pass them as a prop instead. */
   valueFormat?: 'minutes' | 'seconds' | 'ms' | 'iso'
-  /** Adds the prebuilt stylesheet. Defaults to `true`, or `false` when `as` is set. */
+  /** Adds the prebuilt stylesheet. Defaults to `true`, or `false` when `as` is set. `true` forces it. */
   css?: boolean
 }
 
-/** Source of the runtime plugin that provides the app-wide defaults. */
+/**
+ * Source of the runtime plugin that provides the app-wide defaults.
+ * @internal
+ */
 export function generatePluginCode(options: ModuleOptions): string {
   const { as, invalidProps, css: _css, ...defaults } = options
   if (as !== undefined && !/^[A-Za-z_$][\w$]*$/.test(as)) throw new Error(`[${PACKAGE}] \`as\` must be a component name, got "${as}"`)
@@ -37,8 +42,14 @@ export default defineNuxtPlugin((nuxtApp) => {
 }
 
 /**
- * Nuxt module: auto-imports `<DurationInput>` and the composables, and applies app-wide defaults
- * from the `durationInput` key in `nuxt.config`.
+ * Nuxt module: auto-imports `<DurationInput>`, `useDurationInput`, `parseDuration` and `formatDuration`,
+ * applies app-wide defaults from the `durationInput` key in `nuxt.config`, and adds the stylesheet unless `as` is set.
+ *
+ * @example
+ * export default defineNuxtConfig({
+ *   modules: ['semantic-duration-input/nuxt'],
+ *   durationInput: { as: 'UInput', invalidProps: 'nuxtUi' },
+ * })
  */
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: PACKAGE, configKey: 'durationInput' },

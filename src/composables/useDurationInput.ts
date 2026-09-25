@@ -14,16 +14,19 @@ import { fromModelValue, resolveAmount, toModelValue, type DurationAmount, type 
  */
 export type ValidateOn = 'eager' | 'blur' | 'input'
 
+/** Options of `useDurationInput`: the component's parsing, display and validation props. */
 export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> {
   /** How the model stores durations. Defaults to `'minutes'`. */
   valueFormat?: ValueFormat
   /** Language of the normalized text and the messages. Defaults to the first of `locales`. */
   locale?: DurationLocale
+  /** `'short'` ("1h 30min") or `'long'` ("1 hour 30 minutes"). Defaults to `'short'`. */
   displayStyle?: FormatStyle
   /** Units of the normalized text. Defaults to days, hours and minutes (plus seconds with second precision). */
   displayUnits?: UnitKey[]
-  /** Inclusive bounds: a number in the model's unit, or a duration text like `'8h'`. */
+  /** Inclusive lower bound: a number in the model's unit, or a duration text like `'30m'`. */
   min?: DurationAmount
+  /** Inclusive upper bound, like `min`. */
   max?: DurationAmount
   /** Arrow-key step, like `min`/`max`. Defaults to `'15m'`; `false` turns keyboard stepping off. */
   step?: DurationAmount | false
@@ -31,12 +34,18 @@ export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> 
   snapToStep?: boolean
   /** Clamp out-of-range values to `min`/`max` instead of reporting `out_of_range`. */
   clamp?: boolean
+  /** When errors become visible. Defaults to `'eager'`. */
   validateOn?: ValidateOn
 }
 
 /**
  * Headless logic behind `<DurationInput>`: keeps the raw text and the model in sync.
  * Valid input updates `model` while typing; blur/Enter rewrites the text into its normalized form.
+ *
+ * @example
+ * const seconds = ref<number | null>(null)
+ * const { text, error, onInput, onBlur, onKeydown } = useDurationInput(seconds, { valueFormat: 'seconds' })
+ * // <input :value="text" @input="onInput" @blur="onBlur" @keydown="onKeydown" :aria-invalid="!!error">
  */
 export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<DurationInputOptions> = {}) {
   const settings = computed(() => {
@@ -222,6 +231,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
   const rawError = computed<ParseErrorCode | null>(() => failure.value?.error ?? null)
 
   return {
+    /** The text in the field. */
     text,
     /** Current value in seconds. */
     seconds: computed(modelSeconds),
@@ -231,17 +241,27 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     errorDetail: computed(() => shown.value),
     /** The current error, shown or not. */
     rawError,
+    /** Whether the text is valid right now, shown or not. */
     isValid: computed(() => rawError.value === null),
+    /** Normalized form of the text while it differs from what was typed, else `null`. */
     preview,
     /** Resolved options: bounds and step in seconds, locale, display units. */
     settings,
+    /** Formats seconds with the current locale and display options. */
     format,
+    /** Bind to the input's `input` event, or call with the new text. */
     onInput,
+    /** Bind to the input's `blur` event: normalizes the text, like `commit`. */
     onBlur: commit,
+    /** Bind to the input's `keydown` event: arrow/page stepping, Enter to commit, Escape to revert. */
     onKeydown,
+    /** Normalizes the text, shows any error and writes the value. Returns whether it was valid. */
     commit,
+    /** Shows the current error and returns whether the text is valid. */
     validate,
+    /** Goes back to the last committed state. Returns whether anything changed. */
     revert,
+    /** Moves by `direction` steps of `size` seconds (default: `step`). */
     stepBy,
   }
 }

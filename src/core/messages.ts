@@ -4,9 +4,12 @@ import { en } from './locales/en'
 import type { ParseFailure } from './parse'
 import type { UnitKey } from './units'
 
+/** Replacement texts per message key, e.g. `{ empty: 'Required' }`. */
 export type ErrorMessages = Partial<Record<MessageKey, string>>
 
+/** Options of `formatErrorMessage`. */
 export interface ErrorMessageOptions {
+  /** Language of the text and of the formatted bounds. Defaults to English. */
   locale?: DurationLocale
   /** Lower bound in seconds, for `{min}`. */
   min?: number
@@ -22,6 +25,10 @@ export interface ErrorMessageOptions {
  * Human-readable text for a parse error. Pass the whole failure to get `{token}` and `{suggestion}` filled in.
  * `unknown_unit` uses `unknown_unit_suggestion` when there is a suggestion; `out_of_range` uses
  * `out_of_range_min` / `out_of_range_max` when only one bound is set. Overrides of the base key apply to its variants.
+ *
+ * @example
+ * formatErrorMessage(parseDuration('2 huors')) // 'Unknown unit "huors". Did you mean "hours"?'
+ * formatErrorMessage('out_of_range', { min: 1800, max: 28800 }) // 'Must be between 30min and 8h.'
  */
 export function formatErrorMessage(error: ParseErrorCode | ParseFailure, options: ErrorMessageOptions = {}): string {
   const failure: Omit<ParseFailure, 'ok'> = typeof error === 'string' ? { error } : error

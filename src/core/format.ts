@@ -2,6 +2,7 @@ import type { DurationLocale } from './locale'
 import { en } from './locales/en'
 import { UNIT_SECONDS, UNITS_DESC, type UnitKey } from './units'
 
+/** `'short'`: "1d 2h 30min", `'long'`: "1 day 2 hours 30 minutes". */
 export type FormatStyle = 'short' | 'long'
 
 export interface FormatOptions {
@@ -9,10 +10,14 @@ export interface FormatOptions {
   locale?: DurationLocale
   /** `short`: "1d 2h 30min", `long`: "1 day 2 hours 30 minutes". Defaults to `'short'`. */
   style?: FormatStyle
-  /** Units to decompose into. Defaults to days, hours and minutes. */
+  /**
+   * Units to decompose into. Defaults to days, hours and minutes. The smallest one takes the rest,
+   * as a decimal if needed: `formatDuration(5400, { units: ['hour'] })` -> "1.5h".
+   */
   units?: UnitKey[]
 }
 
+/** Units of the normalized text by default: days, hours and minutes. */
 export const DEFAULT_DISPLAY_UNITS: UnitKey[] = ['day', 'hour', 'minute']
 
 /** Formats a duration given in seconds, e.g. `formatDuration(5400)` -> "1h 30min". */

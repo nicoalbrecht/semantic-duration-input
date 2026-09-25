@@ -13,24 +13,34 @@ export interface StandardSchemaV1<Input = unknown, Output = Input> {
     readonly types?: { readonly input: Input; readonly output: Output }
   }
 }
+/** What a Standard Schema's `validate` returns: the value, or the issues. */
 export type StandardSchemaResult<Output> =
   | { readonly value: Output; readonly issues?: undefined }
   | { readonly issues: ReadonlyArray<{ readonly message: string }> }
 
+/** Options of `durationSchema`. Accepts the `ParseOptions` too, except that bounds work like the component's. */
 export interface DurationSchemaOptions extends Omit<ParseOptions, 'min' | 'max'> {
   /** Type of the validated output. Defaults to `'minutes'`. */
   valueFormat?: ValueFormat
   /** Inclusive bounds: a number in the output's unit, or a duration text like `'8h'`. */
   min?: DurationAmount
+  /** Inclusive upper bound, like `min`. */
   max?: DurationAmount
   /** Language of the issue messages. Defaults to the first of `locales`, else English. */
   locale?: DurationLocale
+  /** Replacement texts for the issue messages, see `formatErrorMessage`. */
   messages?: ErrorMessages
 }
 
 /**
  * A Standard Schema that parses duration text into the model value, for Valibot, ArkType, TanStack Form,
  * VeeValidate and other libraries that accept Standard Schema. Values already in the output format pass too.
+ * Empty input validates to `null` unless `required` is set.
+ *
+ * @example
+ * const estimate = durationSchema({ required: true, max: '8h' })
+ * estimate['~standard'].validate('1h30') // { value: 90 }
+ * estimate['~standard'].validate('9h')   // { issues: [{ message: 'Must be at most 8h.' }] }
  */
 export function durationSchema<Output = number | null>(
   options: DurationSchemaOptions = {},

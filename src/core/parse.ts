@@ -7,8 +7,10 @@ import { UNIT_SECONDS, unitsFor, type Precision, type UnitKey } from './units'
 
 export type { ParseErrorCode }
 
+/** Why `parseDuration` rejected the input. Pass it to `formatErrorMessage` for a readable text. */
 export interface ParseFailure {
   ok: false
+  /** What went wrong, see `ParseErrorCode`. */
   error: ParseErrorCode
   /** The part of the input that caused the error, as typed. */
   token?: string
@@ -18,6 +20,10 @@ export interface ParseFailure {
   suggestion?: string
 }
 
+/**
+ * Result of `parseDuration`: either the duration (in seconds and minutes, `null` for empty input)
+ * or a `ParseFailure`. Check `ok` to tell them apart.
+ */
 export type ParseResult = { ok: true; seconds: number | null; minutes: number | null } | ParseFailure
 
 export interface ParseOptions {
@@ -40,6 +46,7 @@ export interface ParseOptions {
   required?: boolean
 }
 
+/** Locales accepted when none are given: English and German. */
 export const DEFAULT_LOCALES: DurationLocale[] = [en, de]
 
 const NUMBER = '\\d+(?:[.,]\\d+)?'
@@ -51,6 +58,15 @@ const CLOCK_SECONDS_RE = /^(\d+):([0-5]\d):([0-5]\d)$/
 
 const toNumber = (text: string) => Number(text.replace(',', '.'))
 
+/**
+ * Parses human-friendly duration text: units (`2h 30min`, `3 Tage`), implicit units (`1h30`),
+ * decimals (`1,5h`), clock format (`1:30`) and ISO 8601 (`PT1H30M`).
+ *
+ * @example
+ * parseDuration('1h 30m')  // { ok: true, seconds: 5400, minutes: 90 }
+ * parseDuration('')        // { ok: true, seconds: null, minutes: null }
+ * parseDuration('2 huors') // { ok: false, error: 'unknown_unit', token: 'huors', index: 2, suggestion: 'hours' }
+ */
 export function parseDuration(input: string, options: ParseOptions = {}): ParseResult {
   const offset = input.length - input.trimStart().length
   const raw = input.trim()

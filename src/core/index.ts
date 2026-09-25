@@ -1,4 +1,9 @@
-// `semantic-duration-input/core`: parsing, formatting and validation without Vue or Tailwind.
+/**
+ * `semantic-duration-input/core`: parsing, formatting and validation without Vue or Tailwind.
+ * Works in the browser and in Node, e.g. to validate on the server.
+ *
+ * @module
+ */
 export { parseDuration, DEFAULT_LOCALES } from './parse'
 export type { ParseErrorCode, ParseFailure, ParseOptions, ParseResult } from './parse'
 export { formatDuration, DEFAULT_DISPLAY_UNITS } from './format'

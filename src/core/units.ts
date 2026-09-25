@@ -1,3 +1,4 @@
+/** Units the parser and the formatter know. There are no months or years. */
 export type UnitKey = 'second' | 'minute' | 'hour' | 'day' | 'week'
 
 /** Length of each unit in seconds. Months/years are omitted on purpose: their length varies. */

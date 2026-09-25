@@ -3,6 +3,7 @@ import { parseDuration, type ParseOptions } from './parse'
 
 /** Converts between seconds and your own model type. */
 export interface CustomValueFormat<T = any> {
+  /** Turns a parsed duration in seconds into the model value. */
   toModel(seconds: number): T
   /** Return `null` for values that aren't a duration. */
   fromModel(value: T): number | null

@@ -1,5 +1,6 @@
 import { defineLocale } from '../locale'
 
+/** English unit names (`h`, `hrs`, `hours`, ...), separator `and`, labels and messages. */
 export const en = defineLocale({
   code: 'en',
   aliases: {

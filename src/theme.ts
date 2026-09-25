@@ -44,7 +44,11 @@ export const durationInputTheme = tv({
   },
 })
 
+/** Variant props of `durationInputTheme`. */
 export type DurationInputVariants = VariantProps<typeof durationInputTheme>
+/** Built-in field sizes: `'sm'`, `'md'`, `'lg'`. */
 export type DurationInputSize = NonNullable<DurationInputVariants['size']>
+/** Built-in field looks: `'outline'`, `'soft'`, `'ghost'`. */
 export type DurationInputVariant = NonNullable<DurationInputVariants['variant']>
+/** Styleable parts, each rendered with `data-slot="<part>"`. */
 export type DurationInputPart = keyof typeof durationInputTheme.slots
