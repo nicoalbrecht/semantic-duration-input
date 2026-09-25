@@ -49,6 +49,12 @@ export interface ParseOptions {
 /** Locales accepted when none are given: English and German. */
 export const DEFAULT_LOCALES: DurationLocale[] = [en, de]
 
+/**
+ * Longer input is rejected as `invalid_format` without parsing. Real durations are far shorter, and
+ * matching a long run of digits takes quadratic time, which would let a large request block a server.
+ */
+const MAX_INPUT_LENGTH = 256
+
 const NUMBER = '\\d+(?:[.,]\\d+)?'
 const NUMBER_RE = new RegExp(`^${NUMBER}$`)
 // A unit word may end with a period (`2 Std.`), but not one that starts a decimal (`1h.5`).
@@ -74,6 +80,8 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
   if (raw === '') {
     return options.required ? { ok: false, error: 'empty' } : { ok: true, seconds: null, minutes: null }
   }
+
+  if (raw.length > MAX_INPUT_LENGTH) return { ok: false, error: 'invalid_format', token: raw, index: offset }
 
   const precision = options.precision ?? 'minute'
   let total = parseClock(raw, precision) ?? fromIso(raw)

@@ -259,6 +259,22 @@ describe('outside changes', () => {
   })
 })
 
+describe('bounds', () => {
+  it('warns once when min is greater than max', async () => {
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const wrapper = mountInput({ min: '8h', max: '1h' })
+      await wrapper.find('input').setValue('2h')
+      expect(spy.mock.calls.filter(([text]) => String(text).includes('`min` (28800s) is greater than `max` (3600s)'))).toHaveLength(1)
+      spy.mockClear()
+      await wrapper.setProps({ max: '10h' })
+      expect(spy).not.toHaveBeenCalled()
+    } finally {
+      spy.mockRestore()
+    }
+  })
+})
+
 describe('forms', () => {
   it('submits the model value through a hidden input instead of the text', async () => {
     const wrapper = mountInput({ modelValue: 90 }, { name: 'duration' })
@@ -279,6 +295,20 @@ describe('forms', () => {
     expect(input.attributes('aria-invalid')).toBeUndefined()
     await input.setValue('2h')
     expect(input.element.validity.customError).toBe(false)
+  })
+
+  it('submits object values of a custom valueFormat as JSON, or via their own toString', () => {
+    const hiddenValue = (modelValue: unknown) =>
+      mount(DurationInput, {
+        props: { modelValue: modelValue as never, valueFormat: { toModel: (s: number) => s, fromModel: () => 5400 } },
+        attrs: { name: 'd' },
+      })
+        .find('input[type=hidden]')
+        .attributes('value')
+    expect(hiddenValue({ hours: 1, minutes: 30 })).toBe('{"hours":1,"minutes":30}')
+    expect(hiddenValue([1, 30])).toBe('[1,30]')
+    // A class instance like Temporal.Duration keeps its own string form.
+    expect(hiddenValue(Object.create({ toString: () => 'PT1H30M' }))).toBe('PT1H30M')
   })
 
   it('renders no hidden input without a name', () => {

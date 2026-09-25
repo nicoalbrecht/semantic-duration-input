@@ -71,9 +71,10 @@ describe('formatDuration', () => {
     expect(formatDuration(3599, { units: ['hour', 'minute'] })).toBe('59.98min')
   })
 
-  it('throws for non-finite input', () => {
+  it('throws for non-finite or negative input', () => {
     expect(() => formatDuration(Infinity)).toThrow(RangeError)
     expect(() => formatDuration(NaN)).toThrow(RangeError)
+    expect(() => formatDuration(-5400)).toThrow(RangeError)
   })
 
   it.skipIf(!('DurationFormat' in Intl))('keeps decimals with Intl.DurationFormat', () => {

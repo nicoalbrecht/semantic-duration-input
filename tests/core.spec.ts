@@ -27,6 +27,10 @@ describe('ISO 8601', () => {
     expect(toIso(seconds)).toBe(text)
     expect(fromIso(text)).toBe(seconds)
   })
+
+  it.each([-60, NaN, Infinity])('toIso(%d) throws instead of dropping the sign', (seconds) => {
+    expect(() => toIso(seconds)).toThrow(RangeError)
+  })
 })
 
 describe('model values', () => {
@@ -49,6 +53,14 @@ describe('model values', () => {
     expect(fromModelValue('garbage', 'iso')).toBeNull()
     expect(fromModelValue(NaN)).toBeNull()
     expect(fromModelValue(undefined)).toBeNull()
+  })
+
+  it('treats negative values as not a duration', () => {
+    expect(fromModelValue(-30)).toBeNull()
+    expect(fromModelValue(-1, 'ms')).toBeNull()
+    expect(fromModelValue(-90, { toModel: (s: number) => s, fromModel: (v: number) => v })).toBeNull()
+    expect(resolveAmount(-30)).toBeUndefined()
+    expect(resolveAmount(-30, 'iso')).toBeUndefined()
   })
 
   it('supports custom formats', () => {
@@ -86,6 +98,11 @@ describe('durationSchema', () => {
     expect(validate(durationSchema({ min: 30 }), 45)).toEqual({ value: 45 })
     expect(validate(durationSchema({ min: 30 }), 15)).toEqual({ issues: [{ message: 'Must be at least 30min.' }] })
     expect(validate(durationSchema(), {})).toMatchObject({ issues: [{}] })
+  })
+
+  it('throws when min is greater than max', () => {
+    expect(() => durationSchema({ min: '8h', max: '1h' })).toThrow(RangeError)
+    expect(() => durationSchema({ min: '1h', max: '1h' })).not.toThrow()
   })
 
   it('rejects negative numbers, which text never parses to', () => {

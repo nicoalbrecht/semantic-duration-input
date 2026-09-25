@@ -35,7 +35,7 @@ export interface DurationSchemaOptions extends Omit<ParseOptions, 'min' | 'max'>
 /**
  * A Standard Schema that parses duration text into the model value, for Valibot, ArkType, TanStack Form,
  * VeeValidate and other libraries that accept Standard Schema. Values already in the output format pass too.
- * Empty input validates to `null` unless `required` is set.
+ * Empty input validates to `null` unless `required` is set. Throws a `RangeError` if `min` is greater than `max`.
  *
  * @example
  * const estimate = durationSchema({ required: true, max: '8h' })
@@ -48,6 +48,9 @@ export function durationSchema<Output = number | null>(
   const { valueFormat = 'minutes', locale = options.locales?.[0] ?? en, messages, ...parseOptions } = options
   const min = resolveAmount(options.min, valueFormat, options)
   const max = resolveAmount(options.max, valueFormat, options)
+  if (min !== undefined && max !== undefined && min > max) {
+    throw new RangeError(`durationSchema: \`min\` (${min}s) is greater than \`max\` (${max}s)`)
+  }
 
   return {
     '~standard': {
@@ -72,8 +75,6 @@ export function durationSchema<Output = number | null>(
 }
 
 function checkRange(seconds: number, min?: number, max?: number): ParseResult {
-  // Text never parses to a negative duration, so a negative number isn't one either.
-  if (seconds < 0) return { ok: false, error: 'invalid_format' }
   if ((min !== undefined && seconds < min) || (max !== undefined && seconds > max)) {
     return { ok: false, error: 'out_of_range' }
   }

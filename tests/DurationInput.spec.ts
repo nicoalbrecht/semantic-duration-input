@@ -76,6 +76,14 @@ describe('DurationInput', () => {
     expect(input.element.value).toBe('')
   })
 
+  it('does not show a negative model value as its positive counterpart', async () => {
+    const wrapper = mount(DurationInput, { props: { modelValue: -30 } })
+    const input = wrapper.find('input')
+    expect(input.element.value).toBe('')
+    await input.trigger('blur')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[null]])
+  })
+
   it('does not overwrite the text while the user types', async () => {
     const wrapper = mountInput()
     const input = wrapper.find('input')
