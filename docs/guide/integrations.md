@@ -5,11 +5,11 @@
 Use `as` to render your UI library's input. The component binds these to it:
 
 - `modelValue`, `onUpdate:modelValue`, `onBlur` and `onKeydown`
-- `disabled` and `required`
+- `disabled`, `readonly` and `required`
 - `aria-invalid` (while an error is shown) and `data-error`
 - `size` and `variant`
 
-Attributes such as `id`, `placeholder` and `class`, and all slots except `default`, are passed through. The library's own props and slots keep working.
+Attributes such as `id`, `placeholder` and `class`, and all slots except `default`, are passed through. Your own listeners (`@blur`, `@keydown`, ...) run alongside the component's. The library's own props and slots keep working.
 
 If `as` is a string such as `'input'`, it gets native props (`value`/`onInput`) instead of `modelValue`.
 
@@ -124,7 +124,7 @@ The slot props:
 | `text` | The text in the field |
 | `value` | The model value |
 | `error`, `errorDetail` | The shown error code, and the shown failure with `token`, `index` and `suggestion` |
-| `rawError` | The current error, shown or not |
+| `rawError`, `rawErrorDetail` | The current error, shown or not, and its failure details |
 | `invalid`, `message`, `messageId` | Whether an error is shown, its text, and the id to give the message element for `aria-describedby` |
 | `preview` | The normalized text while it differs from what was typed, else `null` |
 | `presets`, `selectPreset(preset)` | The resolved presets (`{ id, label, seconds }`), to render your own suggestions |
@@ -152,4 +152,4 @@ import { Input } from '@/components/ui/input'
 app.use(DurationInputPlugin, { as: Input, locale: de, validateOn: 'blur' })
 ```
 
-Every prop can be a default except `min`, `max`, `required` and `disabled`, which belong to the individual field.
+Every prop can be a default except `min`, `max`, `required`, `disabled` and `readonly`, which belong to the individual field.

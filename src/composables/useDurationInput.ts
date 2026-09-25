@@ -36,6 +36,8 @@ export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> 
   clamp?: boolean
   /** When errors become visible. Defaults to `'eager'`. */
   validateOn?: ValidateOn
+  /** Ignore the stepping keys and Escape, like a native read-only input. */
+  readonly?: boolean
 }
 
 /**
@@ -180,6 +182,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
 
   function onKeydown(event: KeyboardEvent) {
     if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return
+    if (settings.value.readonly) return
     const direction = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 }[event.key]
     if (direction !== undefined) {
       const { step } = settings.value
@@ -209,19 +212,24 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
       lastEmitted = undefined
       return
     }
+    // Also forget our last write here: the parent may have rejected or changed it, and a later
+    // outside change back to that value must still update the text.
+    lastEmitted = undefined
     text.value = format(modelSeconds())
     failure.value = shown.value = null
     committed = { text: text.value, value }
   })
 
-  // Re-render the text when display settings change (e.g. switching locale), unless the user has an error to fix.
+  // Re-render the text when display settings change (e.g. switching locale), unless the user has an error to fix
+  // or is still editing. Inline objects (`:value-format="{ ... }"`) change identity on every parent render,
+  // and reformatting then would rewrite the text mid-typing.
   watch(
     () => {
       const { locale, displayStyle, displayUnits, valueFormat } = settings.value
       return [locale, displayStyle, displayUnits.join(), valueFormat]
     },
     () => {
-      if (failure.value !== null) return
+      if (failure.value !== null || text.value !== committed.text) return
       text.value = format(modelSeconds())
       committed = { text: text.value, value: model.value }
     },
@@ -241,6 +249,8 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     errorDetail: computed(() => shown.value),
     /** The current error, shown or not. */
     rawError,
+    /** The current failure, shown or not, with `token`, `index` and `suggestion`. */
+    rawErrorDetail: computed(() => failure.value),
     /** Whether the text is valid right now, shown or not. */
     isValid: computed(() => rawError.value === null),
     /** Normalized form of the text while it differs from what was typed, else `null`. */

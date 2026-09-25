@@ -30,6 +30,13 @@ describe('ISO 8601', () => {
 })
 
 describe('model values', () => {
+  it('ignores non-finite results of a custom fromModel', () => {
+    const format = { toModel: (seconds: number) => seconds, fromModel: (value: number) => value }
+    expect(fromModelValue(Infinity, format)).toBeNull()
+    expect(fromModelValue(NaN, format)).toBeNull()
+    expect(fromModelValue(90, format)).toBe(90)
+  })
+
   it('converts seconds to and from each format', () => {
     expect(toModelValue(5400)).toBe(90)
     expect(toModelValue(5400, 'seconds')).toBe(5400)
@@ -79,6 +86,11 @@ describe('durationSchema', () => {
     expect(validate(durationSchema({ min: 30 }), 45)).toEqual({ value: 45 })
     expect(validate(durationSchema({ min: 30 }), 15)).toEqual({ issues: [{ message: 'Must be at least 30min.' }] })
     expect(validate(durationSchema(), {})).toMatchObject({ issues: [{}] })
+  })
+
+  it('rejects negative numbers, which text never parses to', () => {
+    expect(validate(durationSchema(), -5)).toMatchObject({ issues: [{}] })
+    expect(validate(durationSchema({ valueFormat: 'seconds' }), 0)).toEqual({ value: 0 })
   })
 })
 

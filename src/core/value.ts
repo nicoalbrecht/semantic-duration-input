@@ -28,7 +28,10 @@ export function toModelValue(seconds: number | null, format: ValueFormat = 'minu
 /** Model value -> seconds, or `null` when empty or not a duration. */
 export function fromModelValue(value: unknown, format: ValueFormat = 'minutes'): number | null {
   if (value === null || value === undefined || value === '') return null
-  if (typeof format === 'object') return format.fromModel(value)
+  if (typeof format === 'object') {
+    const seconds = format.fromModel(value)
+    return typeof seconds === 'number' && Number.isFinite(seconds) ? seconds : null
+  }
   if (format === 'iso') return typeof value === 'string' ? fromIso(value) : null
   return typeof value === 'number' && Number.isFinite(value) ? value * FACTORS[format] : null
 }

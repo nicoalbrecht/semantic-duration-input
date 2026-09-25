@@ -30,7 +30,7 @@ export interface ParseOptions {
   /** Locales whose unit names and separator words are accepted. Defaults to `[en, de]`. */
   locales?: DurationLocale[]
   /**
-   * `'minute'` (default): results are rounded to whole minutes and seconds aren't accepted.
+   * `'minute'` (default): results are rounded to whole minutes and seconds aren't a unit (ISO input like `PT30S` is still rounded).
    * `'second'`: seconds (`30s`, `1:02:03`) are accepted and results are rounded to whole seconds.
    */
   precision?: Precision
@@ -51,7 +51,8 @@ export const DEFAULT_LOCALES: DurationLocale[] = [en, de]
 
 const NUMBER = '\\d+(?:[.,]\\d+)?'
 const NUMBER_RE = new RegExp(`^${NUMBER}$`)
-const TOKEN_RE = new RegExp(`(${NUMBER})\\s*(\\p{L}+)`, 'gu')
+// A unit word may end with a period (`2 Std.`), but not one that starts a decimal (`1h.5`).
+const TOKEN_RE = new RegExp(`(${NUMBER})\\s*(\\p{L}+)(?:\\.(?!\\d))?`, 'gu')
 const PART_RE = /[^\s,+&]+/g
 const CLOCK_RE = /^(\d+):([0-5]\d)$/
 const CLOCK_SECONDS_RE = /^(\d+):([0-5]\d):([0-5]\d)$/
@@ -74,14 +75,13 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
     return options.required ? { ok: false, error: 'empty' } : { ok: true, seconds: null, minutes: null }
   }
 
-  const text = raw.toLowerCase()
   const precision = options.precision ?? 'minute'
-  let total = parseClock(text, precision) ?? fromIso(text)
-  if (total === null && options.defaultUnit && NUMBER_RE.test(text)) {
-    total = toNumber(text) * UNIT_SECONDS[options.defaultUnit]
+  let total = parseClock(raw, precision) ?? fromIso(raw)
+  if (total === null && options.defaultUnit && NUMBER_RE.test(raw)) {
+    total = toNumber(raw) * UNIT_SECONDS[options.defaultUnit]
   }
   if (total === null) {
-    const result = parseTokens(raw, text, options)
+    const result = parseTokens(raw, options)
     if (typeof result !== 'number') {
       return result.index === undefined ? result : { ...result, index: result.index + offset }
     }
@@ -90,6 +90,8 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
 
   const granularity = UNIT_SECONDS[precision]
   const seconds = Math.round(total / granularity) * granularity
+  // Absurdly long numbers overflow to Infinity or lose precision.
+  if (!Number.isSafeInteger(seconds)) return { ok: false, error: 'invalid_format', token: raw, index: offset }
   const { min, max } = options
   if ((min !== undefined && seconds < min) || (max !== undefined && seconds > max)) {
     return { ok: false, error: 'out_of_range' }
@@ -104,7 +106,9 @@ function parseClock(text: string, precision: Precision): number | null {
   return short ? Number(short[1]) * 3600 + Number(short[2]) * 60 : null
 }
 
-function parseTokens(raw: string, text: string, options: ParseOptions): number | ParseFailure {
+// Works on the raw text and lowercases single words for lookups: lowercasing the whole text can change
+// its length (e.g. "İ"), which would shift the reported indices.
+function parseTokens(raw: string, options: ParseOptions): number | ParseFailure {
   const locales = options.locales ?? DEFAULT_LOCALES
   const units = unitsFor(options.precision)
   const aliases = buildAliasMap(locales, units)
@@ -119,36 +123,43 @@ function parseTokens(raw: string, text: string, options: ParseOptions): number |
 
   /** Words between tokens that are neither separators nor anything else we understand. */
   const strayParts = (from: number, to: number) =>
-    [...text.slice(from, to).matchAll(PART_RE)]
-      .filter((part) => !separators.has(part[0]))
+    [...raw.slice(from, to).matchAll(PART_RE)]
+      .filter((part) => !separators.has(part[0].toLowerCase()))
       .map((part) => ({ word: part[0], index: from + part.index }))
 
   let total = 0
   let cursor = 0
   let lastUnit: UnitKey | undefined
 
-  for (const match of text.matchAll(TOKEN_RE)) {
+  for (const match of raw.matchAll(TOKEN_RE)) {
     const [stray] = strayParts(cursor, match.index)
     if (stray) return fail(NUMBER_RE.test(stray.word) ? 'missing_unit' : 'invalid_format', stray.index, stray.word.length)
 
     const word = match[2]
-    const wordIndex = match.index + match[0].length - word.length
-    const unit = aliases.get(word)
-    if (!unit) return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(word, aliases.keys()) })
+    const wordIndex = match.index + match[0].indexOf(word, match[1].length)
+    const unit = aliases.get(word.toLowerCase())
+    if (!unit) {
+      return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(word.toLowerCase(), aliases.keys()) })
+    }
 
     total += toNumber(match[1]) * UNIT_SECONDS[unit]
     cursor = match.index + match[0].length
     lastUnit = unit
   }
 
-  const trailing = strayParts(cursor, text.length)
+  const trailing = strayParts(cursor, raw.length)
   if (trailing.length > 0) {
     const [first] = trailing
     const isNumber = NUMBER_RE.test(first.word)
     if (!isNumber) return fail('invalid_format', first.index, first.word.length)
     // `1h30`: a single trailing number takes the unit below the last one.
     const next = lastUnit && options.implicitUnits !== false ? units[units.indexOf(lastUnit) + 1] : undefined
-    if (trailing.length > 1 || !next) return fail('missing_unit', first.index, first.word.length)
+    if (!next) return fail('missing_unit', first.index, first.word.length)
+    // Only one trailing number can take the implicit unit: report the extra one.
+    if (trailing.length > 1) {
+      const [, second] = trailing
+      return fail(NUMBER_RE.test(second.word) ? 'missing_unit' : 'invalid_format', second.index, second.word.length)
+    }
     total += toNumber(first.word) * UNIT_SECONDS[next]
     lastUnit = next
   }

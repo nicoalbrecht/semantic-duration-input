@@ -72,6 +72,8 @@ export function durationSchema<Output = number | null>(
 }
 
 function checkRange(seconds: number, min?: number, max?: number): ParseResult {
+  // Text never parses to a negative duration, so a negative number isn't one either.
+  if (seconds < 0) return { ok: false, error: 'invalid_format' }
   if ((min !== undefined && seconds < min) || (max !== undefined && seconds > max)) {
     return { ok: false, error: 'out_of_range' }
   }

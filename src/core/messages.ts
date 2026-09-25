@@ -38,11 +38,14 @@ export function formatErrorMessage(error: ParseErrorCode | ParseFailure, options
   const template = keys.map((key) => overrides?.[key]).find((text) => text !== undefined) ?? locale.messages[keys[0]]
 
   const bound = (seconds: number | undefined) => (seconds === undefined ? '' : formatDuration(seconds, { locale, units }))
-  return template
-    .replace('{min}', bound(min))
-    .replace('{max}', bound(max))
-    .replace('{token}', failure.token ?? '')
-    .replace('{suggestion}', failure.suggestion ?? '')
+  const values: Record<string, () => string> = {
+    min: () => bound(min),
+    max: () => bound(max),
+    token: () => failure.token ?? '',
+    suggestion: () => failure.suggestion ?? '',
+  }
+  // One pass with a function: every occurrence is filled in, and `$` in the typed token isn't a replacement pattern.
+  return template.replace(/\{(min|max|token|suggestion)\}/g, (_, key: string) => values[key]())
 }
 
 /** Keys to look up, most specific first. */

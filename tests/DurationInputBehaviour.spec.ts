@@ -1,7 +1,8 @@
 import { mount } from '@vue/test-utils'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 import DurationInput from '../src/components/DurationInput.vue'
-import type { DurationInputProps } from '../src'
+import { en, type DurationInputProps } from '../src'
 
 /** Mounts with a working v-model: emitted values are fed back as the `modelValue` prop. */
 function mountInput(props: DurationInputProps & { modelValue?: number | string | null } = {}, attrs = {}) {
@@ -209,6 +210,55 @@ describe('valueFormat and precision', () => {
   })
 })
 
+describe('readonly', () => {
+  it('ignores stepping and Escape', async () => {
+    const wrapper = mountInput({ modelValue: 60, readonly: true })
+    for (const k of ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Escape']) await key(wrapper, k)
+    expect(wrapper.props('modelValue')).toBe(60)
+    expect(wrapper.find('input').attributes('readonly')).toBe('')
+  })
+})
+
+describe('outside changes', () => {
+  it('does not rewrite the text while typing when options are inline objects', async () => {
+    // The parent re-renders on every model change and creates a new valueFormat and locale each time.
+    const Parent = defineComponent(() => {
+      const value = ref<unknown>(null)
+      return () =>
+        h('div', [
+          h('span', String(value.value)),
+          h(DurationInput, {
+            modelValue: value.value as number | null,
+            'onUpdate:modelValue': (v: unknown) => (value.value = v),
+            valueFormat: { toModel: (seconds: number) => seconds, fromModel: (v: number) => v },
+            locale: { ...en },
+          }),
+        ])
+    })
+    const wrapper = mount(Parent)
+    await wrapper.find('input').setValue('1h3')
+    await nextTick()
+    expect(wrapper.find('span').text()).toBe('3780')
+    expect(wrapper.find('input').element.value).toBe('1h3')
+    await wrapper.find('input').trigger('blur')
+    expect(wrapper.find('input').element.value).toBe('1h 3min')
+  })
+
+  it('shows an outside change back to a value the parent rejected earlier', async () => {
+    const value = ref(60)
+    // The parent ignores updates.
+    const wrapper = mount(() => h(DurationInput, { modelValue: value.value, 'onUpdate:modelValue': () => {} }))
+    const input = wrapper.find('input')
+    await input.setValue('2h')
+    value.value = 90
+    await nextTick()
+    expect(input.element.value).toBe('1h 30min')
+    value.value = 120
+    await nextTick()
+    expect(input.element.value).toBe('2h')
+  })
+})
+
 describe('forms', () => {
   it('submits the model value through a hidden input instead of the text', async () => {
     const wrapper = mountInput({ modelValue: 90 }, { name: 'duration' })
@@ -217,6 +267,18 @@ describe('forms', () => {
     expect(wrapper.find('input[type=text]').attributes('name')).toBeUndefined()
     await wrapper.find('input[type=text]').setValue('')
     expect(wrapper.find('input[type=hidden]').attributes('value')).toBe('')
+  })
+
+  it('reports invalid text to the browser, so the form is not submitted', async () => {
+    const wrapper = mountInput({ modelValue: 60 }, { name: 'duration' })
+    const input = wrapper.find<HTMLInputElement>('input[type=text]')
+    await input.setValue('abc')
+    expect(input.element.validity.customError).toBe(true)
+    expect(input.element.validationMessage).toBe('Enter a duration like "1h 30m" or "1:30".')
+    // The error isn't shown yet (eager), but the form must still not submit the last valid value.
+    expect(input.attributes('aria-invalid')).toBeUndefined()
+    await input.setValue('2h')
+    expect(input.element.validity.customError).toBe(false)
   })
 
   it('renders no hidden input without a name', () => {

@@ -22,7 +22,7 @@ With the default minute precision, seconds are not a unit, so `30s` is an `unkno
 
 ## Compound values
 
-`1d 2h 30min`, `2d4h`, `1 hour, 30 minutes`. Parts can be separated by spaces, `,`, `+` or `&`, and by the separator words of the active locales (`and`, `und`).
+`1d 2h 30min`, `2d4h`, `1 hour, 30 minutes`. Parts can be separated by spaces, `,`, `+` or `&`, and by the separator words of the active locales (`and`, `und`). Unit names may end with a period, as in `2 Std. 30 Min.`
 
 ## Implicit units
 
