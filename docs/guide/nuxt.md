@@ -26,6 +26,7 @@ The options are the [app-wide defaults](./integrations#app-wide-defaults), in a 
 | `as` | A component name resolved from `#components`, e.g. `'UInput'`. It must be a valid identifier, or the build fails |
 | `invalidProps` | A preset name: `'nuxtUi'`, `'vuetify'` or `'primevue'` |
 | `valueFormat` | `'minutes'`, `'seconds'`, `'ms'` or `'iso'`. Custom conversions can't be serialized, so pass them as a prop instead |
+| `formatPreview` | Not available: functions can't be serialized, so pass it as a prop instead |
 | `css` | Adds `semantic-duration-input/style.css`. Defaults to `true`, or `false` when `as` is set. `true` forces it |
 | Everything else | As on the component: `locales`, `validateOn`, `presets`, `ui`, ... |
 

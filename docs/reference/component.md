@@ -29,6 +29,7 @@ import { DurationInput } from 'semantic-duration-input'
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Field size. With `as`, any value is passed on |
 | `variant` | `'outline' \| 'soft' \| 'ghost'` | `'outline'` | Field look. With `as`, any value is passed on |
 | `preview` | `boolean` | `false` | Shows the normalized value inside the field while typing, and announces it to screen readers. Built-in field only |
+| `formatPreview` | `(seconds, { normalized, text, value, locale }) => string \| null` | – | Renders the preview instead of the normalized text, see [Custom preview](../guide/behaviour#custom-preview) |
 | `messages` | `{ [key]: string } \| false` | – | Overrides the error texts, or `false` to hide them, see [Error messages](../guide/forms#error-messages) |
 | `ui` | `{ root?, field?, input?, leading?, trailing?, preview?, message?, menu?, option? }` | – | Extra classes per part, see [Styling](../guide/styling#classes-per-part) |
 | `unstyled` | `boolean` | `false` | Drops all default classes |
@@ -92,3 +93,4 @@ Exported from `semantic-duration-input`, besides everything from [`/core`](./cor
 | `DurationInputSlotProps` | Props of the renderless slot |
 | `InvalidPropsFn`, `InvalidState` | An `invalidProps` function and what it receives |
 | `DurationInputOptions`, `ValidateOn` | Options of `useDurationInput` |
+| `PreviewFormatter`, `PreviewContext` | A `formatPreview` function and what it receives |

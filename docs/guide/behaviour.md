@@ -46,6 +46,24 @@ With `preview`, the normalized value appears inside the field as you type (`= 1h
 
 `preview` only works with the built-in field. With [`as`](./integrations), use the `preview` slot prop of the [renderless slot](./integrations#any-other-component-renderless-slot) instead.
 
+### Custom preview
+
+`formatPreview` renders the preview yourself. It gets the duration in seconds and a context with the default preview (`normalized`), the typed `text`, the model `value` and the display `locale`:
+
+```vue
+<DurationInput
+  v-model="minutes"
+  preview
+  :format-preview="(seconds, { value }) => `≈ ${(seconds / 3600).toFixed(1)} hours (${value} min)`"
+/>
+```
+
+<Demo preview :format-preview="(seconds, { value }) => `≈ ${(seconds / 3600).toFixed(1)} hours (${value} min)`" placeholder="Type 90m" />
+
+Its output is shown and announced as is, without the leading `= `. The preview still only appears while the text differs from its normalized form, so it goes away on blur. Return `null` to hide it for a value.
+
+`formatPreview` changes the `preview` slot prop and the `preview` of `useDurationInput` too. It only affects the preview: the text is still normalized with `displayStyle` and `displayUnits` on blur.
+
 ## Keyboard
 
 | Key | Action |

@@ -307,4 +307,17 @@ describe('preview announcement', () => {
       vi.useRealTimers()
     }
   })
+
+  it('announces the formatPreview output as is', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = mountInput({ preview: true, formatPreview: (seconds) => `${seconds / 60} minutes in total` })
+      await wrapper.find('input').setValue('1h30')
+      vi.advanceTimersByTime(600)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('[data-slot=announcer]').text()).toBe('90 minutes in total')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

@@ -126,7 +126,7 @@ The slot props:
 | `error`, `errorDetail` | The shown error code, and the shown failure with `token`, `index` and `suggestion` |
 | `rawError`, `rawErrorDetail` | The current error, shown or not, and its failure details |
 | `invalid`, `message`, `messageId` | Whether an error is shown, its text, and the id to give the message element for `aria-describedby` |
-| `preview` | The normalized text while it differs from what was typed, else `null` |
+| `preview` | The normalized text (or the `formatPreview` output) while it differs from what was typed, else `null` |
 | `presets`, `selectPreset(preset)` | The resolved presets (`{ id, label, seconds }`), to render your own suggestions |
 | `onBlur`, `onKeydown`, `commit`, `validate`, `revert`, `stepBy` | The handlers and methods |
 

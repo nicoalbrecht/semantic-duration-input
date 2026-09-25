@@ -5,7 +5,7 @@ const PACKAGE = 'semantic-duration-input'
 const PRESETS = ['nuxtUi', 'vuetify', 'primevue'] as const
 
 /** Options under the `durationInput` key in `nuxt.config`: the app-wide defaults, in serializable form. */
-export interface ModuleOptions extends Omit<DurationInputDefaults, 'as' | 'invalidProps' | 'valueFormat'> {
+export interface ModuleOptions extends Omit<DurationInputDefaults, 'as' | 'invalidProps' | 'valueFormat' | 'formatPreview'> {
   /** Name of a component to render instead of the built-in field, resolved from `#components`, e.g. `'UInput'`. Must be a valid identifier. */
   as?: string
   /** One of the bundled `invalidProps` presets. */

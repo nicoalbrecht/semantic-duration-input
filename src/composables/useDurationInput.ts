@@ -14,6 +14,21 @@ import { fromModelValue, resolveAmount, toModelValue, type DurationAmount, type 
  */
 export type ValidateOn = 'eager' | 'blur' | 'input'
 
+/** What `formatPreview` gets besides the seconds. */
+export interface PreviewContext {
+  /** The default preview: the normalized text, e.g. "1h 30min". */
+  normalized: string
+  /** The typed text. */
+  text: string
+  /** The value as `v-model` stores it (see `valueFormat`). */
+  value: unknown
+  /** The display locale. */
+  locale: DurationLocale
+}
+
+/** Renders the preview of a valid, non-empty text. Return `null` to hide it. */
+export type PreviewFormatter = (seconds: number, context: PreviewContext) => string | null
+
 /** Options of `useDurationInput`: the component's parsing, display and validation props. */
 export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> {
   /** How the model stores durations. Defaults to `'minutes'`. */
@@ -38,6 +53,8 @@ export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> 
   validateOn?: ValidateOn
   /** Ignore the stepping keys and Escape, like a native read-only input. */
   readonly?: boolean
+  /** Renders `preview` instead of the normalized text. It still only appears while the text isn't normalized. */
+  formatPreview?: PreviewFormatter
 }
 
 /**
@@ -198,13 +215,20 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     }
   }
 
-  /** Normalized form of the current text, while it differs from what was typed; otherwise `null`. */
+  /**
+   * Normalized form of the current text (or `formatPreview`'s output), while the text differs from
+   * the normalized form; otherwise `null`.
+   */
   const preview = computed(() => {
     if (failure.value !== null || text.value.trim() === '') return null
     const result = parse()
     if (!result.ok || result.seconds === null) return null
     const normalized = format(result.seconds)
-    return normalized === text.value.trim() ? null : normalized
+    if (normalized === text.value.trim()) return null
+    const { formatPreview, valueFormat, locale } = settings.value
+    if (!formatPreview) return normalized
+    const value = toModelValue(result.seconds, valueFormat)
+    return formatPreview(result.seconds, { normalized, text: text.value, value, locale }) || null
   })
 
   watch(model, (value) => {
@@ -253,7 +277,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     rawErrorDetail: computed(() => failure.value),
     /** Whether the text is valid right now, shown or not. */
     isValid: computed(() => rawError.value === null),
-    /** Normalized form of the text while it differs from what was typed, else `null`. */
+    /** Normalized form of the text (or `formatPreview`'s output) while it differs from what was typed, else `null`. */
     preview,
     /** Resolved options: bounds and step in seconds, locale, display units. */
     settings,

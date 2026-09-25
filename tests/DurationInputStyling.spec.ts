@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import DurationInput from '../src/components/DurationInput.vue'
-import { de, plugin, type DurationInputSlotProps } from '../src'
+import { de, en, plugin, type DurationInputSlotProps, type PreviewContext } from '../src'
 
 const part = (wrapper: ReturnType<typeof mount>, name: string) => wrapper.find(`[data-slot=${name}]`)
 
@@ -82,6 +82,48 @@ describe('DurationInput styling', () => {
     const off = mount(DurationInput)
     await off.find('input').setValue('90 min')
     expect(part(off, 'preview').exists()).toBe(false)
+  })
+
+  it('renders the preview with formatPreview, without the "= " prefix', async () => {
+    const formatPreview = vi.fn((seconds: number, { value }: PreviewContext) => `${seconds / 3600} hours (${value} min)`)
+    const wrapper = mount(DurationInput, { props: { preview: true, formatPreview } })
+    const input = wrapper.find('input')
+    await input.setValue('90 min')
+    expect(part(wrapper, 'preview').text()).toBe('1.5 hours (90 min)')
+    expect(formatPreview).toHaveBeenLastCalledWith(5400, { normalized: '1h 30min', text: '90 min', value: 90, locale: en })
+    // Still hidden once the text is normalized, and for invalid text.
+    await input.setValue('1h 30min')
+    expect(part(wrapper, 'preview').exists()).toBe(false)
+    await input.setValue('2 parsecs')
+    expect(part(wrapper, 'preview').exists()).toBe(false)
+  })
+
+  it('hides the preview when formatPreview returns null', async () => {
+    const wrapper = mount(DurationInput, { props: { preview: true, formatPreview: (s: number) => (s < 3600 ? null : 'long') } })
+    const input = wrapper.find('input')
+    await input.setValue('45 min')
+    expect(part(wrapper, 'preview').exists()).toBe(false)
+    await input.setValue('90 min')
+    expect(part(wrapper, 'preview').text()).toBe('long')
+  })
+
+  it('passes the formatPreview output to the renderless slot', async () => {
+    let preview: string | null = null
+    const wrapper = mount(DurationInput, {
+      props: { formatPreview: (seconds: number) => `${seconds}s` },
+      slots: { default: (props: DurationInputSlotProps) => ((preview = props.preview), h('input', props.nativeInputProps)) },
+    })
+    await wrapper.find('input').setValue('2m')
+    expect(preview).toBe('120s')
+  })
+
+  it('takes formatPreview from the app-wide defaults', async () => {
+    const wrapper = mount(DurationInput, {
+      props: { preview: true },
+      global: { plugins: [[plugin, { formatPreview: () => 'custom' }]] },
+    })
+    await wrapper.find('input').setValue('90 min')
+    expect(part(wrapper, 'preview').text()).toBe('custom')
   })
 
   it('shows a localized error message linked to the input', async () => {

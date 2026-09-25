@@ -7,7 +7,7 @@ export { DurationInput }
 export type { DurationInputSlotProps, DurationPresetItem } from './components/DurationInput.vue'
 export * from './core/index'
 export { useDurationInput } from './composables/useDurationInput'
-export type { DurationInputOptions, ValidateOn } from './composables/useDurationInput'
+export type { DurationInputOptions, PreviewContext, PreviewFormatter, ValidateOn } from './composables/useDurationInput'
 export { durationInputTheme } from './theme'
 export type { DurationInputPart, DurationInputSize, DurationInputVariant, DurationInputVariants } from './theme'
 export { nuxtUi, primevue, vuetify } from './adapters'
