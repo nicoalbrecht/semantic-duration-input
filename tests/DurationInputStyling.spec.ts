@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
@@ -26,8 +27,19 @@ const LibInput = defineComponent({
 describe('DurationInput styling', () => {
   it('applies size and variant classes and data attributes', () => {
     const wrapper = mount(DurationInput, { props: { size: 'lg', variant: 'soft' } })
-    expect(part(wrapper, 'field').classes()).toEqual(expect.arrayContaining(['h-11', 'bg-(--sdi-soft)']))
+    expect(part(wrapper, 'field').classes()).toEqual(expect.arrayContaining(['h-11', 'bg-(--_sdi-soft)']))
     expect(part(wrapper, 'root').attributes()).toMatchObject({ 'data-size': 'lg', 'data-variant': 'soft' })
+  })
+
+  it('reads colors from tokens that can be set on an ancestor', () => {
+    const css = readFileSync('src/styles/vars.css', 'utf8')
+    for (const token of ['fg', 'bg', 'border', 'ring', 'invalid', 'muted', 'soft', 'popover'])
+      expect(css).toContain(`--_sdi-${token}: var(--sdi-${token},`)
+  })
+
+  it('marks the root as a group for group-data-* variants', () => {
+    const wrapper = mount(DurationInput)
+    expect(part(wrapper, 'root').classes()).toContain('group')
   })
 
   it('merges ui classes over the defaults', () => {

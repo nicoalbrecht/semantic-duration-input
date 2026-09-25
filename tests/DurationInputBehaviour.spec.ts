@@ -72,6 +72,17 @@ describe('validateOn', () => {
   })
 })
 
+describe('required', () => {
+  it('clears the model when the field is emptied and shows the error on blur', async () => {
+    const wrapper = mountInput({ modelValue: 90, required: true })
+    const input = wrapper.find('input')
+    await input.setValue('')
+    expect(wrapper.props('modelValue')).toBeNull()
+    await input.trigger('blur')
+    expect(wrapper.find('[data-slot=message]').text()).toBe('Please enter a duration.')
+  })
+})
+
 describe('keyboard', () => {
   it('steps with arrows, Shift and PageUp/PageDown, snapping to the step', async () => {
     const wrapper = mountInput({ modelValue: 67 })

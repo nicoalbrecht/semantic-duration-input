@@ -8,17 +8,17 @@ import { tv, type VariantProps } from 'tailwind-variants'
  */
 export const durationInputTheme = tv({
   slots: {
-    root: 'flex w-full flex-col gap-1.5',
+    root: 'group flex w-full flex-col gap-1.5',
     field:
-      'relative flex w-full items-center rounded-md border border-(--sdi-border) bg-(--sdi-bg) text-(--sdi-fg) shadow-xs transition-[color,background-color,border-color,box-shadow] focus-within:border-(--sdi-ring) focus-within:ring-[3px] focus-within:ring-(--sdi-ring)/40',
+      'relative flex w-full items-center rounded-md border border-(--_sdi-border) bg-(--_sdi-bg) text-(--_sdi-fg) shadow-xs transition-[color,background-color,border-color,box-shadow] focus-within:border-(--_sdi-ring) focus-within:ring-[3px] focus-within:ring-(--_sdi-ring)/40',
     input:
-      'h-full min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 [color:inherit] [font:inherit] outline-none placeholder:text-(--sdi-muted) disabled:cursor-not-allowed',
-    leading: 'flex shrink-0 items-center text-(--sdi-muted)',
-    trailing: 'flex shrink-0 items-center text-(--sdi-muted)',
-    preview: 'pointer-events-none shrink-0 whitespace-nowrap text-(--sdi-muted) tabular-nums',
-    message: 'text-(--sdi-invalid)',
-    menu: 'absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border border-(--sdi-border) bg-(--sdi-popover) p-1 text-(--sdi-fg) shadow-md',
-    option: 'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 data-active:bg-(--sdi-soft)',
+      'h-full min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 [color:inherit] [font:inherit] outline-none placeholder:text-(--_sdi-muted) disabled:cursor-not-allowed',
+    leading: 'flex shrink-0 items-center text-(--_sdi-muted)',
+    trailing: 'flex shrink-0 items-center text-(--_sdi-muted)',
+    preview: 'pointer-events-none shrink-0 whitespace-nowrap text-(--_sdi-muted) tabular-nums',
+    message: 'text-(--_sdi-invalid)',
+    menu: 'absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border border-(--_sdi-border) bg-(--_sdi-popover) p-1 text-(--_sdi-fg) shadow-md',
+    option: 'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 data-active:bg-(--_sdi-soft)',
   },
   variants: {
     size: {
@@ -28,11 +28,11 @@ export const durationInputTheme = tv({
     },
     variant: {
       outline: {},
-      soft: { field: 'border-transparent bg-(--sdi-soft) shadow-none' },
-      ghost: { field: 'border-transparent bg-transparent shadow-none hover:bg-(--sdi-soft) focus-within:bg-(--sdi-soft)' },
+      soft: { field: 'border-transparent bg-(--_sdi-soft) shadow-none' },
+      ghost: { field: 'border-transparent bg-transparent shadow-none hover:bg-(--_sdi-soft) focus-within:bg-(--_sdi-soft)' },
     },
     invalid: {
-      true: { field: 'border-(--sdi-invalid) focus-within:border-(--sdi-invalid) focus-within:ring-(--sdi-invalid)/30' },
+      true: { field: 'border-(--_sdi-invalid) focus-within:border-(--_sdi-invalid) focus-within:ring-(--_sdi-invalid)/30' },
     },
     disabled: {
       true: { field: 'cursor-not-allowed opacity-50' },

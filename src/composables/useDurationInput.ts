@@ -111,7 +111,8 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     else text.value = typeof event === 'string' ? event : (event.target as HTMLInputElement).value
     const result = parse()
     setFailure(result, false)
-    if (!result.ok) return
+    // An empty field clears the model even when `required` reports it as an error.
+    if (!result.ok) return void (result.error === 'empty' && write(null))
     write(result.seconds === null || !settings.value.clamp ? result.seconds : clampSeconds(result.seconds))
   }
 
