@@ -1,0 +1,52 @@
+{
+  "name": "semantic-duration-input",
+  "version": "0.1.0",
+  "description": "Vue 3 input component that parses human-friendly durations (\"2h\", \"3 days\", \"1h 30m\", \"1:30\") into minutes.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/semantic-duration-input.js",
+  "module": "./dist/semantic-duration-input.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/semantic-duration-input.js"
+    },
+    "./style.css": "./dist/semantic-duration-input.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "keywords": [
+    "vue",
+    "vue3",
+    "duration",
+    "input",
+    "parser",
+    "time"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
+    "happy-dom": "^20.14.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "vite-plugin-dts": "^5.1.1",
+    "vitest": "^5.0.2",
+    "vue": "^3.5.43",
+    "vue-tsc": "^3.3.11"
+  }
+}
