@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.0...v0.2.1) (2026-09-25)
+
+
+### Fixes
+
+* address code review findings ([#2](https://github.com/nicoalbrecht/semantic-duration-input/issues/2)) ([48e0f1a](https://github.com/nicoalbrecht/semantic-duration-input/commit/48e0f1a1a4caeba827c0ec71ae0d7764fb9dce03))
+
 ## 0.2.0 (2026-09-25)
 
 ### Breaking changes
