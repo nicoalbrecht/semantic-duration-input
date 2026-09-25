@@ -3,3 +3,5 @@ dist
 *.log
 .DS_Store
 .playwright-mcp
+docs/.vitepress/cache
+docs/.vitepress/dist

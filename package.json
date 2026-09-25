@@ -50,15 +50,18 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^3.3.1"
   },
   "peerDependencies": {
-    "vue": "^3.5.0",
-    "@nuxt/kit": ">=3.0.0"
+    "@nuxt/kit": ">=3.0.0",
+    "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "@nuxt/kit": {
@@ -78,6 +81,7 @@
     "typescript": "^6.0.3",
     "vite": "^8.3.1",
     "vite-plugin-dts": "^5.1.1",
+    "vitepress": "2.0.0-alpha.20",
     "vitest": "^5.0.2",
     "vue": "^3.5.43",
     "vue-tsc": "^3.3.11",

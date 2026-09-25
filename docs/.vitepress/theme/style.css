@@ -1,0 +1,76 @@
+/*
+ * Tailwind without preflight, so it doesn't fight VitePress' own base styles.
+ * Demos sit in `.vp-raw` blocks, which opt out of the `.vp-doc` content styles.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import '../../../src/styles/vars.css';
+
+@source '../../../src';
+@source '../..';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* The component follows the VitePress theme, light and dark, by setting its tokens once on :root. */
+:root {
+  --sdi-fg: var(--vp-c-text-1);
+  --sdi-border: var(--vp-c-border);
+  --sdi-ring: var(--vp-c-brand-1);
+  --sdi-invalid: var(--vp-c-danger-1);
+  --sdi-muted: var(--vp-c-text-3);
+  --sdi-soft: var(--vp-c-default-soft);
+  --sdi-popover: var(--vp-c-bg-elv);
+}
+
+.demo {
+  margin: 16px 0;
+  padding: 20px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+}
+
+.demo-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.demo-examples button {
+  padding: 2px 8px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+}
+
+.demo-examples button:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+}
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 14px;
+}
+
+.demo-controls select {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+}
