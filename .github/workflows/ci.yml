@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: ci (node ${{ matrix.node }})
+  test:
+    name: test (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,3 +27,14 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run docs:build
+
+  # The required status check. Matrix jobs get the Node version in their name, so this
+  # single job reports `ci` for all of them. `always()` makes it run (and fail) when a
+  # matrix job failed; otherwise it would be skipped, which counts as passing.
+  ci:
+    name: ci
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.test.result }}" = success
