@@ -26,6 +26,15 @@ export function useDurationInput(
   const error = ref<ParseErrorCode | null>(null)
   const isValid = computed(() => error.value === null)
 
+  /** Normalized form of the current text, while it differs from what was typed; otherwise `null`. */
+  const preview = computed(() => {
+    if (error.value !== null || text.value.trim() === '') return null
+    const result = parseDuration(text.value, toValue(options))
+    if (!result.ok || result.minutes === null) return null
+    const normalized = format(result.minutes)
+    return normalized === text.value.trim() ? null : normalized
+  })
+
   // Value we last wrote to `model`, so the watcher can tell our own updates from external ones.
   let lastEmitted: number | null | undefined
 
@@ -35,8 +44,10 @@ export function useDurationInput(
     return result
   }
 
-  function onInput(event: Event | string) {
-    text.value = typeof event === 'string' ? event : (event.target as HTMLInputElement).value
+  /** Accepts an input event or the new text directly (`null`, e.g. from a clear button, means empty). */
+  function onInput(event: Event | string | null) {
+    if (event === null) text.value = ''
+    else text.value = typeof event === 'string' ? event : (event.target as HTMLInputElement).value
     const result = parse()
     if (result.ok && result.minutes !== model.value) {
       lastEmitted = result.minutes
@@ -69,5 +80,5 @@ export function useDurationInput(
     },
   )
 
-  return { text, error, isValid, onInput, onBlur }
+  return { text, error, isValid, preview, onInput, onBlur }
 }

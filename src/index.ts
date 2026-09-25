@@ -1,20 +1,35 @@
 import type { App, Plugin } from 'vue'
 import DurationInput from './components/DurationInput.vue'
+import { DURATION_INPUT_DEFAULTS, type DurationInputDefaults } from './config'
+import './styles/style.css'
 
 export { DurationInput }
+export type { DurationInputSlotProps } from './components/DurationInput.vue'
 export { parseDuration } from './core/parse'
 export type { ParseErrorCode, ParseOptions, ParseResult } from './core/parse'
 export { formatDuration } from './core/format'
 export type { FormatOptions, FormatStyle } from './core/format'
+export { ERROR_MESSAGES, formatErrorMessage } from './core/messages'
+export type { ErrorMessageOptions, ErrorMessages } from './core/messages'
 export { LOCALE_ALIASES, UNIT_MINUTES } from './core/units'
 export type { Locale, UnitAliases, UnitKey } from './core/units'
 export { useDurationInput } from './composables/useDurationInput'
 export type { DurationInputOptions } from './composables/useDurationInput'
+export { durationInputTheme } from './theme'
+export type { DurationInputPart, DurationInputSize, DurationInputVariant, DurationInputVariants } from './theme'
+export { nuxtUi, primevue, vuetify } from './adapters'
+export type { InvalidPropsFn, InvalidState } from './adapters'
+export { DURATION_INPUT_DEFAULTS } from './config'
+export type { DurationInputDefaults, DurationInputProps, DurationInputUi } from './config'
 
-/** Registers `<DurationInput>` globally: `app.use(plugin)`. */
-export const plugin: Plugin = {
-  install(app: App) {
+/**
+ * Registers `<DurationInput>` globally: `app.use(plugin)`.
+ * Pass defaults to apply them to every instance, e.g. `app.use(plugin, { as: UInput, invalidProps: nuxtUi })`.
+ */
+export const plugin: Plugin<[DurationInputDefaults?]> = {
+  install(app: App, defaults: DurationInputDefaults = {}) {
     app.component('DurationInput', DurationInput)
+    app.provide(DURATION_INPUT_DEFAULTS, defaults)
   },
 }
 

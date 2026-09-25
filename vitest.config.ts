@@ -6,5 +6,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['tests/**/*.spec.ts'],
+    // Vuetify's components import their own CSS, which Node can't load untransformed.
+    server: { deps: { inline: ['vuetify'] } },
   },
 })

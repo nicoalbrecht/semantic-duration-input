@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { DurationInput, parseDuration, type FormatStyle, type Locale, type ParseErrorCode } from '../src'
+import { ref, watchEffect } from 'vue'
+import InputText from 'primevue/inputtext'
+import { VTextField } from 'vuetify/components'
+import ShadcnInput from './shadcn/Input.vue'
+import {
+  DurationInput,
+  parseDuration,
+  primevue,
+  vuetify,
+  type FormatStyle,
+  type Locale,
+  type ParseErrorCode,
+} from '../src'
 
 const minutes = ref<number | null>(null)
 const error = ref<ParseErrorCode | null>(null)
 const displayLocale = ref<Locale>('en')
 const displayStyle = ref<FormatStyle>('short')
+const dark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
+watchEffect(() => document.documentElement.classList.toggle('dark', dark.value))
 
 const examples = [
   '2h',
@@ -30,108 +43,150 @@ function pick(example: string) {
   minutes.value = result.ok ? result.minutes : null
   input.value?.focus()
 }
+
+const sizes = ['sm', 'md', 'lg'] as const
+const variants = ['outline', 'soft', 'ghost'] as const
+const shared = ref<number | null>(90)
 </script>
 
 <template>
-  <main>
-    <h1>Semantic Duration Input</h1>
-    <p class="lead">Type a duration like <code>2h</code>, <code>1h 30m</code>, <code>1:30</code> or <code>3 Tage</code>, then leave the field.</p>
+  <div class="min-h-screen bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <main class="mx-auto max-w-2xl space-y-12 px-4 py-12">
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-semibold tracking-tight">Semantic Duration Input</h1>
+          <p class="mt-2 text-zinc-500">
+            Type a duration like <code>2h</code>, <code>1h 30m</code>, <code>1:30</code> or <code>3 Tage</code>, then
+            leave the field.
+          </p>
+        </div>
+        <label class="flex shrink-0 items-center gap-2 text-sm">
+          <input v-model="dark" type="checkbox" /> Dark
+        </label>
+      </header>
 
-    <label for="duration">Duration</label>
-    <DurationInput
-      id="duration"
-      ref="input"
-      v-model="minutes"
-      :display-locale="displayLocale"
-      :display-style="displayStyle"
-      placeholder="e.g. 1h 30m"
-      @error="error = $event"
-    />
+      <section class="space-y-4">
+        <label for="duration" class="block text-sm font-medium">Duration</label>
+        <DurationInput
+          id="duration"
+          ref="input"
+          v-model="minutes"
+          size="lg"
+          preview
+          :display-locale="displayLocale"
+          :display-style="displayStyle"
+          placeholder="e.g. 1h 30m"
+          @error="error = $event"
+        >
+          <template #leading>⏱</template>
+        </DurationInput>
 
-    <dl>
-      <dt>v-model</dt>
-      <dd data-testid="minutes">{{ minutes === null ? 'null' : `${minutes} min` }}</dd>
-      <dt>error</dt>
-      <dd data-testid="error">{{ error ?? '–' }}</dd>
-    </dl>
+        <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
+          <dt class="font-medium">v-model</dt>
+          <dd data-testid="minutes" class="font-mono">{{ minutes === null ? 'null' : `${minutes} min` }}</dd>
+          <dt class="font-medium">error</dt>
+          <dd data-testid="error" class="font-mono">{{ error ?? '–' }}</dd>
+        </dl>
 
-    <fieldset>
-      <legend>Display</legend>
-      <label><input v-model="displayStyle" type="radio" value="short" /> short</label>
-      <label><input v-model="displayStyle" type="radio" value="long" /> long</label>
-      <label><input v-model="displayLocale" type="radio" value="en" /> English</label>
-      <label><input v-model="displayLocale" type="radio" value="de" /> Deutsch</label>
-    </fieldset>
+        <fieldset class="flex flex-wrap gap-4 rounded-lg border border-zinc-500/30 p-3 text-sm">
+          <legend class="px-1">Display</legend>
+          <label><input v-model="displayStyle" type="radio" value="short" /> short</label>
+          <label><input v-model="displayStyle" type="radio" value="long" /> long</label>
+          <label><input v-model="displayLocale" type="radio" value="en" /> English</label>
+          <label><input v-model="displayLocale" type="radio" value="de" /> Deutsch</label>
+        </fieldset>
 
-    <h2>Examples</h2>
-    <ul class="examples">
-      <li v-for="example in examples" :key="example">
-        <button type="button" @click="pick(example)">{{ example }}</button>
-        <span>→ {{ (r => (r.ok ? `${r.minutes} min` : r.error))(parseDuration(example)) }}</span>
-      </li>
-    </ul>
-  </main>
+        <ul class="grid gap-1 text-sm">
+          <li v-for="example in examples" :key="example" class="flex items-center gap-2">
+            <button
+              type="button"
+              class="w-48 rounded border border-zinc-500/30 px-2 py-0.5 text-left font-mono hover:bg-zinc-500/10"
+              @click="pick(example)"
+            >
+              {{ example }}
+            </button>
+            <span class="text-zinc-500">→ {{ (r => (r.ok ? `${r.minutes} min` : r.error))(parseDuration(example)) }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold">Sizes &amp; variants</h2>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <template v-for="variant in variants" :key="variant">
+            <DurationInput
+              v-for="size in sizes"
+              :key="size"
+              v-model="shared"
+              :size="size"
+              :variant="variant"
+              :placeholder="`${variant} / ${size}`"
+            />
+          </template>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <DurationInput v-model="shared" disabled />
+          <DurationInput :model-value="null" required :min="30" :max="480" placeholder="30min – 8h, required" preview>
+            <template #trailing>
+              <span class="text-xs">max 8h</span>
+            </template>
+          </DurationInput>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold">Customizing</h2>
+        <p class="text-sm text-zinc-500"><code>ui</code> overrides (merged with tailwind-merge)</p>
+        <DurationInput
+          v-model="shared"
+          preview
+          :ui="{
+            field: 'rounded-full border-2 border-violet-500/50 px-5 focus-within:border-violet-500 focus-within:ring-violet-500/30',
+            preview: 'rounded-full bg-violet-500/10 px-2 text-violet-600 dark:text-violet-300',
+          }"
+        />
+        <p class="text-sm text-zinc-500"><code>--sdi-*</code> tokens</p>
+        <DurationInput
+          v-model="shared"
+          class="[--sdi-border:var(--color-emerald-500)] [--sdi-ring:var(--color-emerald-500)] [--sdi-invalid:var(--color-orange-500)]"
+        />
+        <p class="text-sm text-zinc-500"><code>unstyled</code> + <code>data-*</code> hooks</p>
+        <DurationInput
+          v-model="shared"
+          unstyled
+          :ui="{
+            root: 'group',
+            field: 'border-b-2 border-zinc-400 py-1 group-data-invalid:border-red-500',
+            input: 'w-full bg-transparent outline-none',
+            message: 'mt-1 text-xs text-red-500',
+          }"
+        />
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold">Design systems</h2>
+
+        <div class="theme-shadcn space-y-2 rounded-lg bg-(--background) p-4 text-(--foreground)">
+          <p class="text-sm font-medium">shadcn-vue theme — built-in field picks up the tokens</p>
+          <DurationInput v-model="shared" preview />
+          <p class="text-sm font-medium">shadcn-vue <code>&lt;Input&gt;</code> via <code>as</code></p>
+          <DurationInput v-model="shared" :as="ShadcnInput" placeholder="e.g. 1h 30m" />
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium">PrimeVue <code>InputText</code> via <code>as</code></p>
+          <DurationInput v-model="shared" :as="InputText" :invalid-props="primevue" fluid />
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm font-medium">Vuetify <code>v-text-field</code> via the slot</p>
+          <DurationInput v-slot="{ inputProps, invalid, message }" v-model="shared">
+            <VTextField v-bind="inputProps" label="Duration" :error="invalid" :error-messages="message ?? []" />
+          </DurationInput>
+          <p class="text-sm font-medium">…or via <code>as</code> with the <code>vuetify</code> preset</p>
+          <DurationInput v-model="shared" :as="VTextField" :invalid-props="vuetify" label="Duration" variant="outlined" />
+        </div>
+      </section>
+    </main>
+  </div>
 </template>
-
-<style>
-:root {
-  font-family: system-ui, sans-serif;
-  color-scheme: light dark;
-}
-main {
-  max-width: 36rem;
-  margin: 3rem auto;
-  padding: 0 1rem;
-}
-.lead {
-  color: GrayText;
-}
-label[for='duration'] {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-.sdi {
-  font: inherit;
-  font-size: 1.25rem;
-  padding: 0.5rem 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
-  border: 2px solid #8884;
-  border-radius: 0.5rem;
-}
-dl {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-}
-dt {
-  font-weight: 600;
-}
-dd {
-  margin: 0;
-  font-family: ui-monospace, monospace;
-}
-fieldset {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  border: 1px solid #8884;
-  border-radius: 0.5rem;
-}
-.examples {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  gap: 0.25rem;
-}
-.examples button {
-  font-family: ui-monospace, monospace;
-  min-width: 12rem;
-  text-align: left;
-}
-.examples span {
-  margin-left: 0.5rem;
-  color: GrayText;
-}
-</style>

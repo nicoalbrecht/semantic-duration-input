@@ -1,0 +1,17 @@
+/*
+ * Design tokens of <DurationInput>. Each one falls back to the host's theme when it has one
+ * (shadcn-vue, then Nuxt UI), otherwise to a neutral color derived from `currentColor`,
+ * so light and dark mode work without extra setup.
+ * Override them on `.sdi` or any ancestor, e.g. `.sdi { --sdi-ring: hotpink }`.
+ */
+@layer base {
+  :where(.sdi) {
+    --sdi-fg: var(--foreground, var(--ui-text, currentColor));
+    --sdi-bg: transparent;
+    --sdi-border: var(--input, var(--ui-border-accented, color-mix(in oklab, currentColor 25%, transparent)));
+    --sdi-ring: var(--ring, var(--ui-primary, Highlight));
+    --sdi-invalid: var(--destructive, var(--ui-error, #dc2626));
+    --sdi-muted: var(--muted-foreground, var(--ui-text-muted, color-mix(in oklab, currentColor 55%, transparent)));
+    --sdi-soft: var(--muted, var(--ui-bg-elevated, color-mix(in oklab, currentColor 8%, transparent)));
+  }
+}

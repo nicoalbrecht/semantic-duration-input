@@ -26,7 +26,7 @@ describe('DurationInput', () => {
     await input.setValue('2 parsecs')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     expect(input.attributes('aria-invalid')).toBe('true')
-    expect(input.classes()).toContain('sdi--invalid')
+    expect(wrapper.find('[data-slot=root]').attributes('data-invalid')).toBe('true')
     expect(wrapper.emitted('error')).toEqual([['unknown_unit']])
   })
 
@@ -89,10 +89,16 @@ describe('DurationInput', () => {
     expect(input.element.value).toBe('1 Stunde 30 Minuten')
   })
 
-  it('passes attributes through to the input', () => {
-    const wrapper = mount(DurationInput, { attrs: { 'data-test': 'x', class: 'custom' } })
+  it('passes attributes through to the input and class/style to the root', () => {
+    const wrapper = mount(DurationInput, {
+      attrs: { 'data-test': 'x', placeholder: 'e.g. 2h', class: 'custom', style: 'color: red' },
+    })
     const input = wrapper.find('input')
     expect(input.attributes('data-test')).toBe('x')
-    expect(input.classes()).toEqual(expect.arrayContaining(['sdi', 'custom']))
+    expect(input.attributes('placeholder')).toBe('e.g. 2h')
+    expect(input.classes()).not.toContain('custom')
+    const root = wrapper.find('[data-slot=root]')
+    expect(root.classes()).toEqual(expect.arrayContaining(['sdi', 'custom']))
+    expect(root.attributes('style')).toContain('color: red')
   })
 })

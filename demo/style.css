@@ -1,0 +1,42 @@
+/* Interleave Vuetify's layers with Tailwind's: its components must beat preflight, and Tailwind utilities
+   must beat Vuetify helpers with the same names (`.border`, `.rounded-*`, ...). */
+@layer theme, base, vuetify-core, components, vuetify-components, vuetify-overrides, vuetify-utilities, utilities, vuetify-final;
+@import 'tailwindcss';
+@import '../src/styles/vars.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+}
+
+/* A shadcn-vue style theme, scoped so the other demo sections keep the neutral defaults. */
+@theme inline {
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-muted-foreground: var(--muted-foreground);
+}
+.theme-shadcn {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+}
+.dark .theme-shadcn {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+}
