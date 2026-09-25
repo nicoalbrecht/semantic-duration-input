@@ -3,6 +3,15 @@
   "version": "0.2.0",
   "description": "Vue 3 input component that parses human-friendly durations (\"2h\", \"3 days\", \"1h30\", \"1:30\", \"PT1H\") into minutes, seconds, ms or ISO 8601.",
   "license": "MIT",
+  "author": "Nico Albrecht",
+  "homepage": "https://nicoalbrecht.github.io/semantic-duration-input/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicoalbrecht/semantic-duration-input.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicoalbrecht/semantic-duration-input/issues"
+  },
   "type": "module",
   "files": [
     "dist"
