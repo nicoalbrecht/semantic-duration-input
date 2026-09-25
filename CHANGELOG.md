@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.2...v0.3.0) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* formatDuration and toIso throw a RangeError for negative, NaN or infinite input; parseDuration rejects input over 256 characters; negative model values are treated as invalid; durationSchema throws a RangeError when min > max.
+
+### Features
+
+* stricter duration validation ([#15](https://github.com/nicoalbrecht/semantic-duration-input/issues/15)) ([fe7cb4b](https://github.com/nicoalbrecht/semantic-duration-input/commit/fe7cb4b71380ab8b6f6c1481614f1c248c33bec6))
+
 ## [0.2.2](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.1...v0.2.2) (2026-09-25)
 
 
