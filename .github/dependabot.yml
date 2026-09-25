@@ -9,3 +9,14 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # TypeScript 7 has no JS compiler API, which vue-tsc, vite-plugin-dts and
+      # @vue/compiler-sfc still need. Revisit once they support it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # PrimeVue 5 / @primeuix/themes 3 moved from MIT to the proprietary PrimeUI
+      # License (license key required). Stay on the MIT 4.x line for the demo and tests.
+      - dependency-name: "primevue"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@primeuix/themes"
+        update-types: ["version-update:semver-major"]

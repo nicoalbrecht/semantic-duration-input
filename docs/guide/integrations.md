@@ -102,6 +102,8 @@ import { primevue } from 'semantic-duration-input'
 </template>
 ```
 
+The adapter works with PrimeVue 4 and 5.
+
 ## Any other component (renderless slot)
 
 For full control, pass a default slot. The component then renders nothing but your slot, and handles only the parsing:
