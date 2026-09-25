@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onBeforeUnmount, ref, useAttrs, useId, watch, type Ref } from 'vue'
+import { computed, inject, mergeProps, nextTick, onBeforeUnmount, ref, useAttrs, useId, watch, watchEffect, type Ref } from 'vue'
 import { cx, type ClassValue } from 'tailwind-variants'
 import type { InvalidState } from '../adapters'
 import { useDurationInput } from '../composables/useDurationInput'
@@ -59,6 +59,8 @@ export interface DurationInputSlotProps {
   errorDetail: ParseFailure | null
   /** The current error, shown or not. */
   rawError: ParseErrorCode | null
+  /** The current failure, shown or not, with `token`, `index` and `suggestion`. */
+  rawErrorDetail: ParseFailure | null
   /** Whether an error is shown. */
   invalid: boolean
   /** Localized text of the shown error, or `null`. */
@@ -127,19 +129,22 @@ const options = computed(() => ({
   min: props.min,
   max: props.max,
   required: props.required,
+  readonly: props.readonly,
 }))
 
 const duration = useDurationInput(model as Ref<unknown>, options)
-const { text, error, errorDetail, rawError, preview, settings, onBlur, commit, validate, revert, stepBy } = duration
+const { text, error, errorDetail, rawError, rawErrorDetail, preview, settings, onBlur, commit, validate, revert, stepBy } =
+  duration
 
 watch(error, (code) => emit('error', code))
 
 const invalid = computed(() => error.value !== null)
-const message = computed(() => {
-  if (errorDetail.value === null || messages.value === false) return null
+function messageFor(failure: ParseFailure) {
   const { locale, min, max, displayUnits } = settings.value
-  return formatErrorMessage(errorDetail.value, { locale, min, max, units: displayUnits, overrides: messages.value })
-})
+  const overrides = messages.value === false ? undefined : messages.value
+  return formatErrorMessage(failure, { locale, min, max, units: displayUnits, overrides })
+}
+const message = computed(() => (errorDetail.value === null || messages.value === false ? null : messageFor(errorDetail.value)))
 const baseId = `sdi-${useId()}`
 const messageId = `${baseId}-message`
 const listId = `${baseId}-list`
@@ -164,7 +169,9 @@ const visibleItems = computed(() => {
   if (!filtering.value || query === '') return presetItems.value
   return presetItems.value.filter((item) => item.label.toLowerCase().includes(query))
 })
-const menuVisible = computed(() => hasMenu.value && menuOpen.value && !props.disabled && visibleItems.value.length > 0)
+const menuVisible = computed(
+  () => hasMenu.value && menuOpen.value && !props.disabled && !props.readonly && visibleItems.value.length > 0,
+)
 const activeItem = computed(() => (menuVisible.value ? visibleItems.value[activeIndex.value] : undefined))
 
 function openMenu(filter: boolean) {
@@ -200,7 +207,7 @@ function onFieldBlur() {
 }
 
 function onFocusOrClick() {
-  if (hasMenu.value && !menuOpen.value && text.value.trim() === '') openMenu(false)
+  if (hasMenu.value && !props.readonly && !menuOpen.value && text.value.trim() === '') openMenu(false)
 }
 
 const MENU_CLOSING_KEYS = new Set(['Enter', 'Tab', 'Escape', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'])
@@ -258,42 +265,46 @@ const hiddenInputProps = computed(() =>
 )
 
 function passthroughAttrs(includeClass: boolean) {
-  const { class: _class, style: _style, name: _name, ...rest } = attrs
+  const { class: _class, style: _style, name: _name, 'aria-describedby': _describedBy, ...rest } = attrs
   return includeClass ? { ...rest, class: _class, style: _style } : rest
 }
+
+/** The caller's `aria-describedby` (e.g. a hint), plus the message of the built-in field. */
+const describedBy = computed(() => {
+  const ownMessage = message.value && !slots.default && !as.value ? messageId : undefined
+  return [attrs['aria-describedby'], ownMessage].filter(Boolean).join(' ') || undefined
+})
 
 function stateProps() {
   return {
     disabled: props.disabled,
+    readonly: props.readonly,
     required: props.required,
-    'aria-invalid': invalid.value ? 'true' : undefined,
+    'aria-describedby': describedBy.value,
+    'aria-invalid': invalid.value ? ('true' as const) : undefined,
     'data-error': error.value ?? undefined,
   }
 }
 
-const inputProps = computed(() => ({
-  ...passthroughAttrs(true),
-  ...stateProps(),
-  modelValue: text.value,
-  'onUpdate:modelValue': onInput,
-  onBlur,
-  onKeydown,
-}))
+// `mergeProps` chains listeners, so the caller's `@blur`, `@keydown` or `@input` still fire next to ours.
+const inputProps = computed(() =>
+  mergeProps(passthroughAttrs(true), stateProps(), {
+    modelValue: text.value,
+    'onUpdate:modelValue': onInput,
+    onBlur,
+    onKeydown,
+  }),
+)
 
-const nativeInputProps = computed(() => ({
-  ...passthroughAttrs(true),
-  ...stateProps(),
-  value: text.value,
-  onInput,
-  onBlur,
-  onKeydown,
-}))
+const nativeInputProps = computed(() =>
+  mergeProps(passthroughAttrs(true), stateProps(), { value: text.value, onInput, onBlur, onKeydown }),
+)
 
 const asProps = computed(() => {
   const base = typeof as.value === 'string' ? nativeInputProps.value : inputProps.value
   const state: InvalidState = { invalid: invalid.value, error: error.value, message: message.value, onBlur }
   // `size` and `variant` are declared props here, but most libraries have them too: pass them on.
-  return { ...base, size: size.value, variant: variant.value, ...invalidProps.value?.(state) }
+  return mergeProps(base, { size: size.value, variant: variant.value }, invalidProps.value?.(state) ?? {})
 })
 
 const comboboxProps = computed(() =>
@@ -317,6 +328,7 @@ const slotProps = computed<DurationInputSlotProps>(() => ({
   error: error.value,
   errorDetail: errorDetail.value,
   rawError: rawError.value,
+  rawErrorDetail: rawErrorDetail.value,
   invalid: invalid.value,
   message: message.value,
   messageId,
@@ -368,6 +380,17 @@ function inputElement() {
   if (!(el instanceof HTMLElement)) return undefined
   return el instanceof HTMLInputElement ? el : (el.querySelector('input') ?? undefined)
 }
+// Tell the browser about invalid text, so a native form isn't submitted with the last valid value.
+// It uses the current failure, shown or not, like native `required` does. With `messages: false`,
+// the browser's tooltip still gets the locale's default text.
+watchEffect(
+  () => {
+    const failure = rawErrorDetail.value
+    inputElement()?.setCustomValidity?.(failure === null ? '' : messageFor(failure))
+  },
+  { flush: 'post' },
+)
+
 defineExpose({
   /** Focuses the input. */
   focus: () => inputElement()?.focus(),
@@ -414,13 +437,8 @@ defineExpose({
         spellcheck="false"
         :class="classFor('input')"
         data-slot="input"
-        v-bind="{ ...passthroughAttrs(false), ...comboboxProps }"
+        v-bind="{ ...passthroughAttrs(false), ...comboboxProps, ...stateProps() }"
         :value="text"
-        :disabled="disabled"
-        :required="required"
-        :aria-invalid="invalid ? 'true' : undefined"
-        :aria-describedby="message ? messageId : undefined"
-        :data-error="error ?? undefined"
         @input="onInput"
         @blur="onFieldBlur"
         @focus="onFocusOrClick"

@@ -100,6 +100,17 @@ describe('parseDuration – error details', () => {
     expect(parseDuration('45')).toEqual({ ok: false, error: 'missing_unit', token: '45', index: 0 })
   })
 
+  it('points at the extra number when several trail the last unit', () => {
+    expect(parseDuration('1h30 30')).toEqual({ ok: false, error: 'missing_unit', token: '30', index: 5 })
+    expect(parseDuration('1h 30 15')).toEqual({ ok: false, error: 'missing_unit', token: '15', index: 6 })
+  })
+
+  it('keeps indices aligned with the typed text when lowercasing changes its length', () => {
+    // "İ".toLowerCase() is two characters long.
+    expect(parseDuration('İİ 2h')).toEqual({ ok: false, error: 'invalid_format', token: 'İİ', index: 0 })
+    expect(parseDuration('2h İx')).toMatchObject({ token: 'İx', index: 3 })
+  })
+
   it('suggests the closest unit for typos', () => {
     expect(parseDuration('2 Huors')).toEqual({ ok: false, error: 'unknown_unit', token: 'Huors', index: 2, suggestion: 'hours' })
     expect(parseDuration('3 minuts')).toMatchObject({ suggestion: 'minute' })
@@ -157,6 +168,17 @@ describe('parseDuration – options', () => {
     expect(parseDuration('45', { defaultUnit: 'minute' })).toMatchObject({ ok: true, minutes: 45 })
     expect(parseDuration('1,5', { defaultUnit: 'hour' })).toMatchObject({ ok: true, minutes: 90 })
     expect(parseDuration('45 15', { defaultUnit: 'minute' })).toMatchObject({ ok: false, error: 'missing_unit' })
+  })
+
+  it('accepts a period after unit names, but not before a decimal', () => {
+    expect(parseDuration('2 Std. 30 Min.')).toMatchObject({ ok: true, minutes: 150 })
+    expect(parseDuration('2 hrs.')).toMatchObject({ ok: true, minutes: 120 })
+    expect(parseDuration('1h.5')).toMatchObject({ ok: false, error: 'invalid_format' })
+  })
+
+  it('rejects numbers too large to represent', () => {
+    expect(parseDuration(`${'9'.repeat(400)}h`)).toMatchObject({ ok: false, error: 'invalid_format', index: 0 })
+    expect(parseDuration(`${'9'.repeat(30)}m`)).toMatchObject({ ok: false, error: 'invalid_format' })
   })
 
   it('can turn implicit units off', () => {

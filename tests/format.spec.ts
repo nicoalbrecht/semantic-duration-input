@@ -65,6 +65,23 @@ describe('formatDuration', () => {
     expect(formatDuration(90)).toBe('1.5min')
   })
 
+  it('carries a rounded-up smallest unit into the larger ones', () => {
+    expect(formatDuration(86399, { units: ['day', 'hour'] })).toBe('1d')
+    expect(formatDuration(604740, { units: ['week', 'day'] })).toBe('1w')
+    expect(formatDuration(3599, { units: ['hour', 'minute'] })).toBe('59.98min')
+  })
+
+  it('throws for non-finite input', () => {
+    expect(() => formatDuration(Infinity)).toThrow(RangeError)
+    expect(() => formatDuration(NaN)).toThrow(RangeError)
+  })
+
+  it.skipIf(!('DurationFormat' in Intl))('keeps decimals with Intl.DurationFormat', () => {
+    const fr = defineLocale({ ...en, code: 'fr', labels: undefined })
+    const hours = new Intl.NumberFormat('fr', { style: 'unit', unit: 'hour', unitDisplay: 'long' }).format(1.5)
+    expect(formatDuration(5400, { locale: fr, style: 'long', units: ['hour'] })).toBe(hours)
+  })
+
   it.skipIf(!('DurationFormat' in Intl))('uses Intl.DurationFormat for locales without labels', () => {
     const fr = defineLocale({ ...en, code: 'fr', labels: undefined })
     expect(formatDuration(5400, { locale: fr, style: 'long' })).toBe(

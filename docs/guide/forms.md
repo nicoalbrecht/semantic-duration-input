@@ -4,6 +4,8 @@
 
 With a `name`, a hidden input carries the model value (`90`, or `PT1H30M` with `'iso'`), so the form submits what `v-model` holds, not the typed text. This also works with `as`. The renderless slot gets `hiddenInputProps` to bind it yourself.
 
+While the text is invalid, the input reports it to the browser through `setCustomValidity()`, with the error message as text. So the browser blocks submitting the form instead of sending the last valid value, just like it does for an empty `required` field. This happens with the built-in field and with `as`. With the renderless slot, call `setCustomValidity()` yourself, e.g. from `rawErrorDetail`.
+
 ```vue
 <form method="post">
   <DurationInput name="estimate" required />

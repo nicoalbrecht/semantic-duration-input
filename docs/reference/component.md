@@ -24,6 +24,7 @@ import { DurationInput } from 'semantic-duration-input'
 | `validateOn` | `'eager' \| 'blur' \| 'input'` | `'eager'` | When errors are shown, see [Behaviour](../guide/behaviour#when-errors-appear) |
 | `required` | `boolean` | `false` | Empty input is an `empty` error |
 | `disabled` | `boolean` | `false` | |
+| `readonly` | `boolean` | `false` | Read-only: no stepping, reverting or presets menu |
 | `presets` | `(number \| string \| { label?, value })[]` | – | Suggestions menu, see [Presets](../guide/behaviour#presets). Built-in field only |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Field size. With `as`, any value is passed on |
 | `variant` | `'outline' \| 'soft' \| 'ghost'` | `'outline'` | Field look. With `as`, any value is passed on |
@@ -84,7 +85,7 @@ Exported from `semantic-duration-input`, besides everything from [`/core`](./cor
 | Type | |
 | --- | --- |
 | `DurationInputProps` | The props above |
-| `DurationInputDefaults` | App-wide defaults: the props except `min`, `max`, `required` and `disabled` |
+| `DurationInputDefaults` | App-wide defaults: the props except `min`, `max`, `required`, `disabled` and `readonly` |
 | `DurationInputUi`, `DurationInputPart` | The `ui` prop and its part names |
 | `DurationInputSize`, `DurationInputVariant`, `DurationInputVariants` | Built-in sizes and looks |
 | `DurationPreset`, `DurationPresetItem` | A `presets` entry, and a resolved one as given to the slot |

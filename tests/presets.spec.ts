@@ -94,6 +94,15 @@ describe('presets', () => {
     expect(wrapper.props('modelValue')).toBe(75)
   })
 
+  it('stays closed and unchanged when readonly', async () => {
+    const wrapper = mountInput({ readonly: true })
+    await wrapper.find('input').trigger('focus')
+    expect(isOpen(wrapper)).toBe(false)
+    await wrapper.find('input').trigger('keydown', { key: 'ArrowDown', altKey: true })
+    expect(isOpen(wrapper)).toBe(false)
+    expect(wrapper.props('modelValue')).toBeNull()
+  })
+
   it('closes on blur', async () => {
     const wrapper = mountInput()
     await wrapper.find('input').trigger('focus')

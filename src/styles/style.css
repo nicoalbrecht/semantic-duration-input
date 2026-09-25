@@ -1,5 +1,6 @@
 /* Prebuilt stylesheet for apps without Tailwind: only the utilities <DurationInput> uses, no preflight. */
-@layer theme, base, utilities;
+/* Same order as Tailwind's, so a host's `components` layer still sits below `utilities` if this loads first. */
+@layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities) source(none);
 @source '../theme.ts';

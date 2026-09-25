@@ -79,6 +79,8 @@ export interface DurationInputProps {
   required?: boolean
   /** Disables the input. */
   disabled?: boolean
+  /** Makes the input read-only: no typing, stepping, reverting or presets. */
+  readonly?: boolean
   /** Suggestions shown in a menu below the built-in field. Not supported with `as`; use the renderless slot. */
   presets?: DurationPreset[]
   /** Render this component (e.g. a design system's input) instead of the built-in field. */
@@ -109,7 +111,7 @@ export interface DurationInputProps {
 }
 
 /** App-wide defaults, set via `app.use(plugin, defaults)`. Props on the component win. */
-export type DurationInputDefaults = Omit<DurationInputProps, 'min' | 'max' | 'required' | 'disabled'>
+export type DurationInputDefaults = Omit<DurationInputProps, 'min' | 'max' | 'required' | 'disabled' | 'readonly'>
 
 /** Injection key of the app-wide defaults. `app.use(plugin, defaults)` provides it for you. */
 export const DURATION_INPUT_DEFAULTS: InjectionKey<DurationInputDefaults> = Symbol('DurationInputDefaults')

@@ -15,6 +15,14 @@ describe('formatErrorMessage', () => {
     expect(formatErrorMessage('out_of_range', { max: 5400, locale: de })).toBe('Darf höchstens 1h 30min sein.')
   })
 
+  it('fills in every placeholder, and takes `$` in the token literally', () => {
+    const failure: ParseFailure = { ok: false, error: 'invalid_format', token: "a$'b$&" }
+    expect(formatErrorMessage(failure, { overrides: { invalid_format: 'Bad "{token}"' } })).toBe(`Bad "a$'b$&"`)
+    expect(formatErrorMessage('out_of_range', { min: 60, max: 120, overrides: { out_of_range: '{min}-{max} ({min})' } })).toBe(
+      '1min-2min (1min)',
+    )
+  })
+
   it('fills in the token and suggestion', () => {
     expect(formatErrorMessage(parseDuration('2 huors') as ParseFailure)).toBe('Unknown unit "huors". Did you mean "hours"?')
     expect(formatErrorMessage(parseDuration('2 parsecs') as ParseFailure)).toBe(

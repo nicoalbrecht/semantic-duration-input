@@ -111,6 +111,18 @@ describe('DurationInput styling', () => {
   })
 })
 
+describe('DurationInput aria-describedby', () => {
+  it('keeps the caller\'s description and adds the message', async () => {
+    const wrapper = mount(DurationInput, { attrs: { 'aria-describedby': 'hint' } })
+    const input = wrapper.find('input')
+    expect(input.attributes('aria-describedby')).toBe('hint')
+    await input.setValue('2 parsecs')
+    await input.trigger('blur')
+    const messageId = part(wrapper, 'message').attributes('id')
+    expect(input.attributes('aria-describedby')).toBe(`hint ${messageId}`)
+  })
+})
+
 describe('DurationInput renderless slot', () => {
   it('works with a component through inputProps', async () => {
     let scope: DurationInputSlotProps | undefined
@@ -169,6 +181,29 @@ describe('DurationInput as', () => {
     const wrapper = mount(DurationInput, { props: { modelValue: null, as: 'input' } })
     await wrapper.find('input').setValue('1:30')
     expect(wrapper.emitted('update:modelValue')).toEqual([[90]])
+  })
+
+  it('keeps the caller\'s listeners next to its own', async () => {
+    const calls: string[] = []
+    const listeners = {
+      onBlur: () => calls.push('blur'),
+      onKeydown: () => calls.push('keydown'),
+      onInput: () => calls.push('input'),
+    }
+    const wrapper = mount(DurationInput, { props: { modelValue: null, as: 'input' }, attrs: listeners })
+    const input = wrapper.find('input')
+    await input.setValue('2h')
+    await input.trigger('keydown', { key: 'a' })
+    await input.trigger('blur')
+    expect(calls).toEqual(['input', 'keydown', 'blur'])
+    expect(wrapper.emitted('update:modelValue')).toEqual([[120]])
+    expect(input.element.value).toBe('2h')
+
+    const lib = mount(DurationInput, { props: { modelValue: null, as: LibInput }, attrs: { onBlur: () => calls.push('lib blur') } })
+    await lib.find('input').setValue('3h')
+    await lib.find('input').trigger('blur')
+    expect(calls).toContain('lib blur')
+    expect(lib.find('input').element.value).toBe('3h')
   })
 
   it('exposes focus() for components that wrap the input', () => {
