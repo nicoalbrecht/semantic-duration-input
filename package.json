@@ -1,7 +1,7 @@
 {
   "name": "semantic-duration-input",
-  "version": "0.1.0",
-  "description": "Vue 3 input component that parses human-friendly durations (\"2h\", \"3 days\", \"1h 30m\", \"1:30\") into minutes.",
+  "version": "0.2.0",
+  "description": "Vue 3 input component that parses human-friendly durations (\"2h\", \"3 days\", \"1h30\", \"1:30\", \"PT1H\") into minutes, seconds, ms or ISO 8601.",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -14,6 +14,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/semantic-duration-input.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./nuxt": {
+      "types": "./dist/nuxt.d.ts",
+      "import": "./dist/nuxt.js"
     },
     "./style.css": "./dist/semantic-duration-input.css",
     "./tailwind.css": "./dist/tailwind.css"
@@ -32,7 +40,10 @@
     "shadcn-vue",
     "nuxt-ui",
     "vuetify",
-    "primevue"
+    "primevue",
+    "nuxt",
+    "iso8601",
+    "standard-schema"
   ],
   "scripts": {
     "dev": "vite",
@@ -46,9 +57,17 @@
     "tailwind-variants": "^3.3.1"
   },
   "peerDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "@nuxt/kit": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@nuxt/kit": "^4.5.2",
+    "@nuxt/schema": "^4.5.2",
     "@primeuix/themes": "^2.0.3",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-vue": "^6.0.9",

@@ -20,7 +20,7 @@ function tailwindEntry(): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'tailwind.css',
-        source: `/* Import after "tailwindcss": @import "semantic-duration-input/tailwind.css"; */\n@source "./${fileName}.js";\n\n${vars}`,
+        source: `/* Import after "tailwindcss": @import "semantic-duration-input/tailwind.css"; */\n@source "./*.js";\n\n${vars}`,
       })
     },
   }
@@ -35,13 +35,17 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(import.meta.dirname, 'src/index.ts'),
+      entry: {
+        [fileName]: resolve(import.meta.dirname, 'src/index.ts'),
+        core: resolve(import.meta.dirname, 'src/core/index.ts'),
+        nuxt: resolve(import.meta.dirname, 'src/nuxt.ts'),
+      },
       formats: ['es'],
-      fileName,
+      fileName: (_format, name) => `${name}.js`,
       cssFileName: fileName,
     },
     rollupOptions: {
-      external: ['vue', 'tailwind-variants', 'tailwind-merge'],
+      external: ['vue', 'tailwind-variants', 'tailwind-merge', '@nuxt/kit', /^#/],
     },
   },
 })
