@@ -183,6 +183,8 @@ function onFocusOrClick() {
   if (hasMenu.value && !menuOpen.value && text.value.trim() === '') openMenu(false)
 }
 
+const MENU_CLOSING_KEYS = new Set(['Enter', 'Tab', 'Escape', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'])
+
 function onKeydown(event: KeyboardEvent) {
   if (menuVisible.value) {
     const count = visibleItems.value.length
@@ -203,12 +205,14 @@ function onKeydown(event: KeyboardEvent) {
       closeMenu()
       return
     }
-    if (event.key === 'Tab' || event.key === 'Enter') closeMenu()
   } else if (hasMenu.value && event.altKey && event.key === 'ArrowDown') {
     event.preventDefault()
     openMenu(false)
     return
   }
+  // Also when the menu is open but hidden (nothing matched): committing or stepping changes the text,
+  // which could match a preset and pop the menu up again.
+  if (MENU_CLOSING_KEYS.has(event.key)) closeMenu()
   duration.onKeydown(event)
 }
 

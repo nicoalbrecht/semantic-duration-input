@@ -47,6 +47,15 @@ describe('presets', () => {
     expect(isOpen(wrapper)).toBe(false)
   })
 
+  it('stays closed when Enter normalizes unmatched text into a preset label', async () => {
+    const wrapper = mountInput({ presets: ['1h 30m'] })
+    await wrapper.find('input').setValue('1h30')
+    expect(isOpen(wrapper)).toBe(false)
+    await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+    expect(wrapper.find('input').element.value).toBe('1h 30min')
+    expect(isOpen(wrapper)).toBe(false)
+  })
+
   it('navigates with arrows and selects with Enter', async () => {
     const wrapper = mountInput()
     const input = wrapper.find('input')
