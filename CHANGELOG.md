@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.1...v0.2.2) (2026-09-25)
+
+
+### Fixes
+
+* Fix formatting by adding newline at end of file ([#6](https://github.com/nicoalbrecht/semantic-duration-input/issues/6)) ([8927915](https://github.com/nicoalbrecht/semantic-duration-input/commit/89279154862e5f3a80ca73127ea08d1109d4f535))
+
 ## [0.2.1](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.0...v0.2.1) (2026-09-25)
 
 
