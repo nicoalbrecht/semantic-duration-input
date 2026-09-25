@@ -25,15 +25,15 @@ export function toModelValue(seconds: number | null, format: ValueFormat = 'minu
   return seconds / FACTORS[format]
 }
 
-/** Model value -> seconds, or `null` when empty or not a duration. */
+const durationSeconds = (seconds: unknown) =>
+  typeof seconds === 'number' && Number.isFinite(seconds) && seconds >= 0 ? seconds : null
+
+/** Model value -> seconds, or `null` when empty or not a duration. Negative values aren't durations: text never parses to one. */
 export function fromModelValue(value: unknown, format: ValueFormat = 'minutes'): number | null {
   if (value === null || value === undefined || value === '') return null
-  if (typeof format === 'object') {
-    const seconds = format.fromModel(value)
-    return typeof seconds === 'number' && Number.isFinite(seconds) ? seconds : null
-  }
+  if (typeof format === 'object') return durationSeconds(format.fromModel(value))
   if (format === 'iso') return typeof value === 'string' ? fromIso(value) : null
-  return typeof value === 'number' && Number.isFinite(value) ? value * FACTORS[format] : null
+  return typeof value === 'number' ? durationSeconds(value * FACTORS[format]) : null
 }
 
 /** A bound or step: a number in the model's unit (minutes for `'iso'`), or a duration text like `'30m'`. */
@@ -50,6 +50,6 @@ export function resolveAmount(
     const result = parseDuration(amount, { locales: options.locales, precision: 'second' })
     return result.ok && result.seconds !== null ? result.seconds : undefined
   }
-  if (format === 'iso') return amount * 60
-  return fromModelValue(amount, format) ?? undefined
+  // Numbers are minutes for 'iso', which has no numeric model value.
+  return fromModelValue(amount, format === 'iso' ? 'minutes' : format) ?? undefined
 }

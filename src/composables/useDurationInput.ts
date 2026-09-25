@@ -1,4 +1,4 @@
-import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+import { computed, ref, toValue, warn, watch, type MaybeRefOrGetter, type Ref } from 'vue'
 import { DEFAULT_DISPLAY_UNITS, formatDuration, type FormatStyle } from '../core/format'
 import type { DurationLocale } from '../core/locale'
 import { en } from '../core/locales/en'
@@ -83,6 +83,17 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
       step: o.step === false ? undefined : amount(o.step ?? '15m'),
     }
   })
+
+  // A development-only hint: with `min` above `max`, every value is out of range (or clamps to `min`).
+  // Watches a string, not the settings object, so it only fires when the bounds actually change.
+  watch(
+    () => {
+      const { min, max } = settings.value
+      return min !== undefined && max !== undefined && min > max ? `\`min\` (${min}s) is greater than \`max\` (${max}s)` : ''
+    },
+    (problem) => problem && warn(`[semantic-duration-input] ${problem}, so no value is valid.`),
+    { immediate: true },
+  )
 
   const format = (seconds: number | null) => {
     if (seconds === null) return ''

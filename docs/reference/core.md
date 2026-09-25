@@ -8,7 +8,7 @@ Everything here is also exported from `semantic-duration-input`. The core entry 
 
 ## `parseDuration(input, options?)`
 
-Parses duration text. Returns `{ ok: true, seconds, minutes }`, with both `null` for empty input, or a failure.
+Parses duration text. Returns `{ ok: true, seconds, minutes }`, with both `null` for empty input, or a failure. Input longer than 256 characters (after trimming) is rejected as `invalid_format` without being parsed, so it's safe to call on untrusted input, e.g. on the server.
 
 ```ts
 parseDuration('1h 30m')  // { ok: true, seconds: 5400, minutes: 90 }
@@ -47,6 +47,8 @@ formatDuration(5400, { units: ['hour'] })             // '1.5h'
 | `style` | `'short'` | `'short'` or `'long'` |
 | `units` | `['day', 'hour', 'minute']` | Units to decompose into. The smallest one takes the rest, as a decimal if needed |
 
+Throws a `RangeError` for negative, `NaN` or infinite input.
+
 ## `formatErrorMessage(error, options?)`
 
 Readable text for an error code or a whole `ParseFailure`. Pass the failure to get `{token}` and `{suggestion}` filled in.
@@ -76,6 +78,8 @@ fromIso('P1DT2H')  // 93600
 fromIso('1h')      // null
 ```
 
+`toIso` throws a `RangeError` for negative, `NaN` or infinite input.
+
 ## Model values
 
 These convert between seconds and a `valueFormat`. They're used by the component and exported for custom inputs:
@@ -83,7 +87,7 @@ These convert between seconds and a `valueFormat`. They're used by the component
 | Function | |
 | --- | --- |
 | `toModelValue(seconds, format)` | Seconds → model value. `null` stays `null` |
-| `fromModelValue(value, format)` | Model value → seconds, or `null` when empty or not a duration |
+| `fromModelValue(value, format)` | Model value → seconds, or `null` when empty or not a duration (including negative numbers) |
 | `resolveAmount(amount, format, { locales })` | A bound or step (number in the model's unit, or text like `'8h'`) → seconds, or `undefined` if invalid |
 
 ## Locales

@@ -61,7 +61,7 @@ Unknown units get a suggestion from the unit names of the active locales and pre
 | Code | When |
 | --- | --- |
 | `empty` | Nothing entered, with `required` |
-| `invalid_format` | Not a duration at all (`hello`, `1:5`, `P1Y`), or a stray word (`2h foo`) |
+| `invalid_format` | Not a duration at all (`hello`, `1:5`, `P1Y`), a stray word (`2h foo`), or longer than 256 characters |
 | `unknown_unit` | A number followed by an unknown word (`5 parsecs`) |
 | `missing_unit` | A number without a unit (`45`, `1h 30 15`) |
 | `out_of_range` | Below `min` or above `max` |

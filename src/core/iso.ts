@@ -14,9 +14,12 @@ export function fromIso(text: string): number | null {
   return ISO_FIELDS.reduce((sum, size, i) => sum + (match[i + 1] ? Number(match[i + 1].replace(',', '.')) * size : 0), 0)
 }
 
-/** ISO 8601 duration in `PnDTnHnMnS` form (no weeks, for the widest interoperability). */
+/** ISO 8601 duration in `PnDTnHnMnS` form (no weeks, for the widest interoperability). Throws a `RangeError` for negative or non-finite input. */
 export function toIso(seconds: number): string {
-  let remaining = Math.round(Math.abs(seconds))
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new RangeError(`toIso: expected a finite, non-negative number, got ${seconds}`)
+  }
+  let remaining = Math.round(seconds)
   const take = (size: number) => {
     const value = Math.floor(remaining / size)
     remaining -= value * size

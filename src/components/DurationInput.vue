@@ -264,10 +264,19 @@ onBeforeUnmount(() => clearTimeout(announceTimer))
 /** With a `name`, the form gets the model value from a hidden input instead of the raw text. */
 const name = computed(() => attrs.name as string | undefined)
 const hiddenInputProps = computed(() =>
-  name.value
-    ? { type: 'hidden', name: name.value, value: model.value === null ? '' : String(model.value), disabled: props.disabled }
-    : null,
+  name.value ? { type: 'hidden', name: name.value, value: formValue(model.value), disabled: props.disabled } : null,
 )
+
+/**
+ * Text of the hidden input. Plain objects and arrays from a custom `valueFormat` are sent as JSON
+ * instead of "[object Object]"; other objects (e.g. `Temporal.Duration`) use their own `toString`.
+ */
+function formValue(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value !== 'object') return String(value)
+  const plain = Array.isArray(value) || Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null
+  return plain ? JSON.stringify(value) : String(value)
+}
 
 function passthroughAttrs(includeClass: boolean) {
   const { class: _class, style: _style, name: _name, 'aria-describedby': _describedBy, ...rest } = attrs

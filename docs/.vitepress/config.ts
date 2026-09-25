@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 const repo = 'https://github.com/nicoalbrecht/semantic-duration-input'
 // Default branch, for the changelog and "edit this page" links.
-const branch = 'feat/initial-scaffold'
+const branch = 'main'
 
 export default defineConfig({
   title: 'Semantic Duration Input',

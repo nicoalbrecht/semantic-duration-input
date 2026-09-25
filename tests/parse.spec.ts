@@ -181,6 +181,14 @@ describe('parseDuration – options', () => {
     expect(parseDuration(`${'9'.repeat(30)}m`)).toMatchObject({ ok: false, error: 'invalid_format' })
   })
 
+  it('rejects overlong input quickly', () => {
+    // Without the cap, matching this many digits takes seconds.
+    const start = performance.now()
+    expect(parseDuration(' ' + '1'.repeat(100_000))).toMatchObject({ ok: false, error: 'invalid_format', index: 1 })
+    expect(performance.now() - start).toBeLessThan(100)
+    expect(parseDuration(`${'1h '.repeat(85)}`)).toMatchObject({ ok: true, minutes: 85 * 60 })
+  })
+
   it('can turn implicit units off', () => {
     expect(parseDuration('1h30', { implicitUnits: false })).toMatchObject({ ok: false, error: 'missing_unit' })
   })

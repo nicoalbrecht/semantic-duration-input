@@ -20,17 +20,19 @@ export interface FormatOptions {
 /** Units of the normalized text by default: days, hours and minutes. */
 export const DEFAULT_DISPLAY_UNITS: UnitKey[] = ['day', 'hour', 'minute']
 
-/** Formats a duration given in seconds, e.g. `formatDuration(5400)` -> "1h 30min". Throws a `RangeError` for `NaN`/`Infinity`. */
+/** Formats a duration given in seconds, e.g. `formatDuration(5400)` -> "1h 30min". Throws a `RangeError` for negative or non-finite input. */
 export function formatDuration(seconds: number, options: FormatOptions = {}): string {
   const { locale = en, style = 'short', units = DEFAULT_DISPLAY_UNITS } = options
-  if (!Number.isFinite(seconds)) throw new RangeError(`formatDuration: expected a finite number, got ${seconds}`)
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new RangeError(`formatDuration: expected a finite, non-negative number, got ${seconds}`)
+  }
   const selected = UNITS_DESC.filter((unit) => units.includes(unit))
   if (selected.length === 0) throw new Error('formatDuration: `units` must not be empty')
 
   // Count in hundredths of the smallest unit, so its rounding carries over into the larger units
   // (86399s with units ['day', 'hour'] is "1d", not "24h"). Unit sizes are whole multiples of each other.
   const smallest = UNIT_SECONDS[selected[selected.length - 1]]
-  let remaining = Math.round((Math.round(Math.abs(seconds)) / smallest) * 100)
+  let remaining = Math.round((Math.round(seconds) / smallest) * 100)
   const parts: [UnitKey, number][] = []
   for (const [i, unit] of selected.entries()) {
     const size = (UNIT_SECONDS[unit] / smallest) * 100
