@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
 import DurationInput from '../src/components/DurationInput.vue'
-import { plugin, type DurationInputSlotProps } from '../src'
+import { de, plugin, type DurationInputSlotProps } from '../src'
 
 const part = (wrapper: ReturnType<typeof mount>, name: string) => wrapper.find(`[data-slot=${name}]`)
 
@@ -73,9 +73,10 @@ describe('DurationInput styling', () => {
   })
 
   it('shows a localized error message linked to the input', async () => {
-    const wrapper = mount(DurationInput, { props: { displayLocale: 'de' } })
+    const wrapper = mount(DurationInput, { props: { locale: de } })
     const input = wrapper.find('input')
     await input.setValue('45')
+    await input.trigger('blur')
     const message = part(wrapper, 'message')
     expect(message.text()).toBe('Gib eine Einheit an, z. B. „45min“ oder „2h“.')
     expect(input.attributes('aria-describedby')).toBe(message.attributes('id'))
@@ -87,10 +88,12 @@ describe('DurationInput styling', () => {
   it('supports overriding or hiding messages', async () => {
     const custom = mount(DurationInput, { props: { messages: { missing_unit: 'Unit?' } } })
     await custom.find('input').setValue('45')
+    await custom.find('input').trigger('blur')
     expect(part(custom, 'message').text()).toBe('Unit?')
 
     const hidden = mount(DurationInput, { props: { messages: false } })
     await hidden.find('input').setValue('45')
+    await hidden.find('input').trigger('blur')
     expect(part(hidden, 'message').exists()).toBe(false)
     expect(hidden.find('input').attributes('aria-invalid')).toBe('true')
   })
@@ -99,10 +102,10 @@ describe('DurationInput styling', () => {
 describe('DurationInput renderless slot', () => {
   it('works with a component through inputProps', async () => {
     let scope: DurationInputSlotProps | undefined
-    const wrapper = mount(DurationInput, {
+    const wrapper: ReturnType<typeof mount<typeof DurationInput>> = mount(DurationInput, {
       props: {
         modelValue: null,
-        'onUpdate:modelValue': (value: number | null) => wrapper.setProps({ modelValue: value }),
+        'onUpdate:modelValue': (value: number | string | null): unknown => wrapper.setProps({ modelValue: value }),
       },
       slots: {
         default: (props: DurationInputSlotProps) => {
@@ -118,8 +121,9 @@ describe('DurationInput renderless slot', () => {
     await input.trigger('blur')
     expect(input.element.value).toBe('7d 21h')
     await input.setValue('2 parsecs')
+    await input.trigger('blur')
     expect(wrapper.find('.lib-input').attributes('data-invalid')).toBe('true')
-    expect(scope?.message).toBe('Unknown unit. Use minutes, hours, days or weeks.')
+    expect(scope?.message).toBe('Unknown unit "parsecs". Use minutes, hours, days or weeks.')
   })
 
   it('works with a native input through nativeInputProps', async () => {
@@ -143,6 +147,7 @@ describe('DurationInput as', () => {
     expect(wrapper.find('.icon').exists()).toBe(true)
     expect(wrapper.find('input').element.value).toBe('30min')
     await wrapper.find('input').setValue('2 parsecs')
+    await wrapper.find('input').trigger('blur')
     expect(wrapper.find('.lib-input').attributes('data-invalid')).toBe('true')
     await wrapper.find('input').setValue('2h')
     expect(wrapper.emitted('update:modelValue')).toEqual([[120]])

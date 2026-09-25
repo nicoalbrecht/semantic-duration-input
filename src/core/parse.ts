@@ -1,84 +1,142 @@
-import { buildAliasMap, UNIT_MINUTES, type Locale, type UnitAliases } from './units'
+import { fromIso } from './iso'
+import { buildAliasMap, type DurationLocale, type ParseErrorCode } from './locale'
+import { de } from './locales/de'
+import { en } from './locales/en'
+import { suggest } from './suggest'
+import { UNIT_SECONDS, unitsFor, type Precision, type UnitKey } from './units'
 
-export type ParseErrorCode =
-  | 'empty'
-  | 'invalid_format'
-  | 'unknown_unit'
-  | 'missing_unit'
-  | 'out_of_range'
+export type { ParseErrorCode }
 
-export type ParseResult =
-  | { ok: true; minutes: number | null }
-  | { ok: false; error: ParseErrorCode }
+export interface ParseFailure {
+  ok: false
+  error: ParseErrorCode
+  /** The part of the input that caused the error, as typed. */
+  token?: string
+  /** Position of `token` in the input. */
+  index?: number
+  /** For `unknown_unit`: the closest known unit name, if one is close enough. */
+  suggestion?: string
+}
+
+export type ParseResult = { ok: true; seconds: number | null; minutes: number | null } | ParseFailure
 
 export interface ParseOptions {
-  /** Built-in locales whose unit names are accepted. Defaults to `['en', 'de']`. */
-  locales?: Locale[]
-  /** Extra unit aliases, e.g. `{ hour: ['óra'] }`. */
-  customAliases?: UnitAliases
-  /** Inclusive lower bound in minutes. */
+  /** Locales whose unit names and separator words are accepted. Defaults to `[en, de]`. */
+  locales?: DurationLocale[]
+  /**
+   * `'minute'` (default): results are rounded to whole minutes and seconds aren't accepted.
+   * `'second'`: seconds (`30s`, `1:02:03`) are accepted and results are rounded to whole seconds.
+   */
+  precision?: Precision
+  /** A bare number after the last unit takes the next smaller unit: `1h30` is 1h 30min. Defaults to `true`. */
+  implicitUnits?: boolean
+  /** Unit for input that is only a number, e.g. `'minute'` makes `45` mean 45 minutes. */
+  defaultUnit?: UnitKey
+  /** Inclusive lower bound in seconds. */
   min?: number
-  /** Inclusive upper bound in minutes. */
+  /** Inclusive upper bound in seconds. */
   max?: number
-  /** When true, empty input is an error instead of `null`. */
+  /** Report empty input as `empty` instead of returning `null`. */
   required?: boolean
 }
 
+export const DEFAULT_LOCALES: DurationLocale[] = [en, de]
+
+const NUMBER = '\\d+(?:[.,]\\d+)?'
+const NUMBER_RE = new RegExp(`^${NUMBER}$`)
+const TOKEN_RE = new RegExp(`(${NUMBER})\\s*(\\p{L}+)`, 'gu')
+const PART_RE = /[^\s,+&]+/g
 const CLOCK_RE = /^(\d+):([0-5]\d)$/
-const TOKEN_RE = /(\d+(?:[.,]\d+)?)\s*(\p{L}+)/gu
-const SEPARATOR_RE = /^(?:\s|,|\+|&|\band\b|\bund\b)*$/
-const BARE_NUMBER_RE = /^[\s,+&]*\d+(?:[.,]\d+)?[\s,+&]*$/
+const CLOCK_SECONDS_RE = /^(\d+):([0-5]\d):([0-5]\d)$/
+
+const toNumber = (text: string) => Number(text.replace(',', '.'))
 
 export function parseDuration(input: string, options: ParseOptions = {}): ParseResult {
-  const text = input.trim().toLowerCase()
-
-  if (text === '') {
-    return options.required ? { ok: false, error: 'empty' } : { ok: true, minutes: null }
+  const offset = input.length - input.trimStart().length
+  const raw = input.trim()
+  if (raw === '') {
+    return options.required ? { ok: false, error: 'empty' } : { ok: true, seconds: null, minutes: null }
   }
 
-  const minutes = parseClock(text) ?? parseTokens(text, options)
-  if (typeof minutes !== 'number') return minutes
+  const text = raw.toLowerCase()
+  const precision = options.precision ?? 'minute'
+  let total = parseClock(text, precision) ?? fromIso(text)
+  if (total === null && options.defaultUnit && NUMBER_RE.test(text)) {
+    total = toNumber(text) * UNIT_SECONDS[options.defaultUnit]
+  }
+  if (total === null) {
+    const result = parseTokens(raw, text, options)
+    if (typeof result !== 'number') {
+      return result.index === undefined ? result : { ...result, index: result.index + offset }
+    }
+    total = result
+  }
 
+  const granularity = UNIT_SECONDS[precision]
+  const seconds = Math.round(total / granularity) * granularity
   const { min, max } = options
-  if ((min !== undefined && minutes < min) || (max !== undefined && minutes > max)) {
+  if ((min !== undefined && seconds < min) || (max !== undefined && seconds > max)) {
     return { ok: false, error: 'out_of_range' }
   }
-  return { ok: true, minutes }
+  return { ok: true, seconds, minutes: seconds / 60 }
 }
 
-function parseClock(text: string): number | null {
-  const match = CLOCK_RE.exec(text)
-  if (!match) return null
-  return Number(match[1]) * 60 + Number(match[2])
+function parseClock(text: string, precision: Precision): number | null {
+  const long = precision === 'second' ? CLOCK_SECONDS_RE.exec(text) : null
+  if (long) return Number(long[1]) * 3600 + Number(long[2]) * 60 + Number(long[3])
+  const short = CLOCK_RE.exec(text)
+  return short ? Number(short[1]) * 3600 + Number(short[2]) * 60 : null
 }
 
-function parseTokens(text: string, options: ParseOptions): number | { ok: false; error: ParseErrorCode } {
-  const aliases = buildAliasMap(options.locales, options.customAliases)
+function parseTokens(raw: string, text: string, options: ParseOptions): number | ParseFailure {
+  const locales = options.locales ?? DEFAULT_LOCALES
+  const units = unitsFor(options.precision)
+  const aliases = buildAliasMap(locales, units)
+  const separators = new Set(locales.flatMap((locale) => locale.separators ?? []).map((word) => word.toLowerCase()))
+  const fail = (error: ParseErrorCode, index: number, length: number, extra: Partial<ParseFailure> = {}): ParseFailure => ({
+    ok: false,
+    error,
+    token: raw.slice(index, index + length),
+    index,
+    ...extra,
+  })
+
+  /** Words between tokens that are neither separators nor anything else we understand. */
+  const strayParts = (from: number, to: number) =>
+    [...text.slice(from, to).matchAll(PART_RE)]
+      .filter((part) => !separators.has(part[0]))
+      .map((part) => ({ word: part[0], index: from + part.index }))
+
   let total = 0
   let cursor = 0
-  let tokenCount = 0
+  let lastUnit: UnitKey | undefined
 
   for (const match of text.matchAll(TOKEN_RE)) {
-    const gapError = checkGap(text.slice(cursor, match.index))
-    if (gapError) return { ok: false, error: gapError }
+    const [stray] = strayParts(cursor, match.index)
+    if (stray) return fail(NUMBER_RE.test(stray.word) ? 'missing_unit' : 'invalid_format', stray.index, stray.word.length)
 
-    const unit = aliases.get(match[2])
-    if (!unit) return { ok: false, error: 'unknown_unit' }
+    const word = match[2]
+    const wordIndex = match.index + match[0].length - word.length
+    const unit = aliases.get(word)
+    if (!unit) return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(word, aliases.keys()) })
 
-    total += Number(match[1].replace(',', '.')) * UNIT_MINUTES[unit]
+    total += toNumber(match[1]) * UNIT_SECONDS[unit]
     cursor = match.index + match[0].length
-    tokenCount++
+    lastUnit = unit
   }
 
-  const gapError = checkGap(text.slice(cursor))
-  if (gapError) return { ok: false, error: gapError }
-  if (tokenCount === 0) return { ok: false, error: 'invalid_format' }
+  const trailing = strayParts(cursor, text.length)
+  if (trailing.length > 0) {
+    const [first] = trailing
+    const isNumber = NUMBER_RE.test(first.word)
+    if (!isNumber) return fail('invalid_format', first.index, first.word.length)
+    // `1h30`: a single trailing number takes the unit below the last one.
+    const next = lastUnit && options.implicitUnits !== false ? units[units.indexOf(lastUnit) + 1] : undefined
+    if (trailing.length > 1 || !next) return fail('missing_unit', first.index, first.word.length)
+    total += toNumber(first.word) * UNIT_SECONDS[next]
+    lastUnit = next
+  }
 
-  return Math.round(total)
-}
-
-/** Text between tokens may only contain separators; a stray number means a unit is missing. */
-function checkGap(gap: string): ParseErrorCode | null {
-  if (SEPARATOR_RE.test(gap)) return null
-  return BARE_NUMBER_RE.test(gap) ? 'missing_unit' : 'invalid_format'
+  if (lastUnit === undefined) return fail('invalid_format', 0, raw.length)
+  return total
 }

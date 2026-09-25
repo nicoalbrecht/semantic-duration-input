@@ -10,19 +10,21 @@ export const durationInputTheme = tv({
   slots: {
     root: 'flex w-full flex-col gap-1.5',
     field:
-      'flex w-full items-center rounded-md border border-(--sdi-border) bg-(--sdi-bg) text-(--sdi-fg) shadow-xs transition-[color,background-color,border-color,box-shadow] focus-within:border-(--sdi-ring) focus-within:ring-[3px] focus-within:ring-(--sdi-ring)/40',
+      'relative flex w-full items-center rounded-md border border-(--sdi-border) bg-(--sdi-bg) text-(--sdi-fg) shadow-xs transition-[color,background-color,border-color,box-shadow] focus-within:border-(--sdi-ring) focus-within:ring-[3px] focus-within:ring-(--sdi-ring)/40',
     input:
       'h-full min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 [color:inherit] [font:inherit] outline-none placeholder:text-(--sdi-muted) disabled:cursor-not-allowed',
     leading: 'flex shrink-0 items-center text-(--sdi-muted)',
     trailing: 'flex shrink-0 items-center text-(--sdi-muted)',
     preview: 'pointer-events-none shrink-0 whitespace-nowrap text-(--sdi-muted) tabular-nums',
     message: 'text-(--sdi-invalid)',
+    menu: 'absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-md border border-(--sdi-border) bg-(--sdi-popover) p-1 text-(--sdi-fg) shadow-md',
+    option: 'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 data-active:bg-(--sdi-soft)',
   },
   variants: {
     size: {
-      sm: { field: 'h-8 gap-1.5 px-2.5 text-sm', message: 'text-xs' },
-      md: { field: 'h-9 gap-2 px-3 text-sm', message: 'text-sm' },
-      lg: { field: 'h-11 gap-2.5 px-4 text-base', message: 'text-sm' },
+      sm: { field: 'h-8 gap-1.5 px-2.5 text-sm', message: 'text-xs', option: 'px-1.5 py-1 text-xs' },
+      md: { field: 'h-9 gap-2 px-3 text-sm', message: 'text-sm', option: 'text-sm' },
+      lg: { field: 'h-11 gap-2.5 px-4 text-base', message: 'text-sm', option: 'px-3 py-2 text-base' },
     },
     variant: {
       outline: {},

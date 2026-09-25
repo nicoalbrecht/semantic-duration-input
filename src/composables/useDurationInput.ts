@@ -1,47 +1,108 @@
 import { computed, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
-import { formatDuration, type FormatOptions } from '../core/format'
-import { parseDuration, type ParseErrorCode, type ParseOptions } from '../core/parse'
+import { DEFAULT_DISPLAY_UNITS, formatDuration, type FormatStyle } from '../core/format'
+import type { DurationLocale } from '../core/locale'
+import { en } from '../core/locales/en'
+import { DEFAULT_LOCALES, parseDuration, type ParseErrorCode, type ParseFailure, type ParseOptions } from '../core/parse'
+import { UNIT_SECONDS, type UnitKey } from '../core/units'
+import { fromModelValue, resolveAmount, toModelValue, type DurationAmount, type ValueFormat } from '../core/value'
 
-export interface DurationInputOptions extends ParseOptions {
-  displayLocale?: FormatOptions['locale']
-  displayStyle?: FormatOptions['style']
-  displayUnits?: FormatOptions['units']
+/**
+ * When errors become visible. The model is updated live in every mode.
+ * - `'eager'`: on blur/Enter, then live while an error is shown (so fixing it clears it right away).
+ * - `'blur'`: only on blur/Enter.
+ * - `'input'`: on every keystroke.
+ */
+export type ValidateOn = 'eager' | 'blur' | 'input'
+
+export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> {
+  /** How the model stores durations. Defaults to `'minutes'`. */
+  valueFormat?: ValueFormat
+  /** Language of the normalized text and the messages. Defaults to the first of `locales`. */
+  locale?: DurationLocale
+  displayStyle?: FormatStyle
+  /** Units of the normalized text. Defaults to days, hours and minutes (plus seconds with second precision). */
+  displayUnits?: UnitKey[]
+  /** Inclusive bounds: a number in the model's unit, or a duration text like `'8h'`. */
+  min?: DurationAmount
+  max?: DurationAmount
+  /** Arrow-key step, like `min`/`max`. Defaults to `'15m'`; `false` turns keyboard stepping off. */
+  step?: DurationAmount | false
+  /** Round to the nearest `step` on blur/Enter. */
+  snapToStep?: boolean
+  /** Clamp out-of-range values to `min`/`max` instead of reporting `out_of_range`. */
+  clamp?: boolean
+  validateOn?: ValidateOn
 }
 
 /**
- * Headless logic behind `<DurationInput>`: keeps the raw text and the minute value in sync.
- * Valid input updates `model` while typing; blur rewrites the text into its normalized form.
+ * Headless logic behind `<DurationInput>`: keeps the raw text and the model in sync.
+ * Valid input updates `model` while typing; blur/Enter rewrites the text into its normalized form.
  */
-export function useDurationInput(
-  model: Ref<number | null | undefined>,
-  options: MaybeRefOrGetter<DurationInputOptions> = {},
-) {
-  const format = (minutes: number | null | undefined) => {
-    if (minutes === null || minutes === undefined) return ''
-    const { displayLocale, displayStyle, displayUnits } = toValue(options)
-    return formatDuration(minutes, { locale: displayLocale, style: displayStyle, units: displayUnits })
-  }
-
-  const text = ref(format(model.value))
-  const error = ref<ParseErrorCode | null>(null)
-  const isValid = computed(() => error.value === null)
-
-  /** Normalized form of the current text, while it differs from what was typed; otherwise `null`. */
-  const preview = computed(() => {
-    if (error.value !== null || text.value.trim() === '') return null
-    const result = parseDuration(text.value, toValue(options))
-    if (!result.ok || result.minutes === null) return null
-    const normalized = format(result.minutes)
-    return normalized === text.value.trim() ? null : normalized
+export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<DurationInputOptions> = {}) {
+  const settings = computed(() => {
+    const o = toValue(options)
+    const valueFormat = o.valueFormat ?? 'minutes'
+    const locales = o.locales ?? DEFAULT_LOCALES
+    const amount = (value: DurationAmount | undefined) => resolveAmount(value, valueFormat, { locales })
+    return {
+      ...o,
+      valueFormat,
+      locales,
+      locale: o.locale ?? locales[0] ?? en,
+      displayUnits: o.displayUnits ?? (o.precision === 'second' ? [...DEFAULT_DISPLAY_UNITS, 'second'] : DEFAULT_DISPLAY_UNITS),
+      min: amount(o.min),
+      max: amount(o.max),
+      step: o.step === false ? undefined : amount(o.step ?? '15m'),
+    }
   })
 
-  // Value we last wrote to `model`, so the watcher can tell our own updates from external ones.
-  let lastEmitted: number | null | undefined
+  const format = (seconds: number | null) => {
+    if (seconds === null) return ''
+    const { locale, displayStyle, displayUnits } = settings.value
+    return formatDuration(seconds, { locale, style: displayStyle, units: displayUnits })
+  }
 
-  function parse() {
-    const result = parseDuration(text.value, toValue(options))
-    error.value = result.ok ? null : result.error
-    return result
+  const modelSeconds = () => fromModelValue(model.value, settings.value.valueFormat)
+
+  const text = ref(format(modelSeconds()))
+  /** Current parse failure, whether shown or not. */
+  const failure = ref<ParseFailure | null>(null)
+  /** The failure that is shown, according to `validateOn`. */
+  const shown = ref<ParseFailure | null>(null)
+  // What Escape goes back to: the state after the last commit or external change.
+  let committed = { text: text.value, value: model.value }
+  // Value we last wrote to `model`, so the watcher can tell our own updates from external ones.
+  let lastEmitted: unknown
+
+  function parse(withRange = true) {
+    const s = settings.value
+    return parseDuration(text.value, {
+      locales: s.locales,
+      precision: s.precision,
+      implicitUnits: s.implicitUnits,
+      defaultUnit: s.defaultUnit,
+      required: s.required,
+      min: s.clamp || !withRange ? undefined : s.min,
+      max: s.clamp || !withRange ? undefined : s.max,
+    })
+  }
+
+  function clampSeconds(seconds: number) {
+    const { min, max } = settings.value
+    return Math.max(0, min ?? 0, Math.min(seconds, max ?? Infinity))
+  }
+
+  function write(seconds: number | null) {
+    const value = toModelValue(seconds, settings.value.valueFormat)
+    if (value === model.value) return
+    lastEmitted = value
+    model.value = value
+  }
+
+  function setFailure(result: ReturnType<typeof parse>, show: boolean) {
+    failure.value = result.ok ? null : result
+    const mode = settings.value.validateOn ?? 'eager'
+    if (show || mode === 'input' || (mode === 'eager' && shown.value !== null)) shown.value = failure.value
   }
 
   /** Accepts an input event or the new text directly (`null`, e.g. from a clear button, means empty). */
@@ -49,36 +110,137 @@ export function useDurationInput(
     if (event === null) text.value = ''
     else text.value = typeof event === 'string' ? event : (event.target as HTMLInputElement).value
     const result = parse()
-    if (result.ok && result.minutes !== model.value) {
-      lastEmitted = result.minutes
-      model.value = result.minutes
+    setFailure(result, false)
+    if (!result.ok) return
+    write(result.seconds === null || !settings.value.clamp ? result.seconds : clampSeconds(result.seconds))
+  }
+
+  /** Parses, shows any error and, if valid, writes the (clamped/snapped) value and normalizes the text. */
+  function commit(): boolean {
+    const result = parse()
+    setFailure(result, true)
+    if (!result.ok) return false
+    let seconds = result.seconds
+    const { clamp, snapToStep, step } = settings.value
+    if (seconds !== null && snapToStep && step) seconds = Math.round(seconds / step) * step
+    if (seconds !== null && (clamp || snapToStep)) seconds = clampSeconds(seconds)
+    write(seconds)
+    text.value = format(seconds)
+    committed = { text: text.value, value: model.value }
+    return true
+  }
+
+  /** Shows the current error (e.g. on form submit) and returns whether the input is valid. */
+  function validate(): boolean {
+    const result = parse()
+    setFailure(result, true)
+    return result.ok
+  }
+
+  /** Goes back to the last committed state. Returns whether anything changed. */
+  function revert(): boolean {
+    if (text.value === committed.text && model.value === committed.value) return false
+    text.value = committed.text
+    failure.value = shown.value = null
+    if (model.value !== committed.value) {
+      lastEmitted = committed.value
+      model.value = committed.value
+    }
+    return true
+  }
+
+  /**
+   * Moves by `direction` steps of `size` seconds (default: `step`), snapping to multiples of `size`:
+   * with a 15min step, `1h07` goes up to `1h15` and down to `1h`.
+   */
+  function stepBy(direction: number, size = settings.value.step) {
+    if (!size || direction === 0) return
+    // Start from the text if it parses (even out of range), else from the last valid value.
+    const parsed = parse(false)
+    const base = parsed.ok ? parsed.seconds : modelSeconds()
+    let next: number
+    if (base === null) next = direction > 0 ? size : 0
+    else if (direction > 0) next = (Math.floor(base / size) + direction) * size
+    else next = (Math.ceil(base / size) + direction) * size
+    next = clampSeconds(next)
+    write(next)
+    text.value = format(next)
+    failure.value = shown.value = null
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return
+    const direction = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 }[event.key]
+    if (direction !== undefined) {
+      const { step } = settings.value
+      if (!step) return
+      const size = event.key.startsWith('Page') ? UNIT_SECONDS.day : event.shiftKey ? UNIT_SECONDS.hour : step
+      event.preventDefault()
+      stepBy(direction, size)
+    } else if (event.key === 'Enter') {
+      commit()
+    } else if (event.key === 'Escape' && revert()) {
+      event.preventDefault()
+      event.stopPropagation()
     }
   }
 
-  function onBlur() {
+  /** Normalized form of the current text, while it differs from what was typed; otherwise `null`. */
+  const preview = computed(() => {
+    if (failure.value !== null || text.value.trim() === '') return null
     const result = parse()
-    if (result.ok) text.value = format(result.minutes)
-  }
+    if (!result.ok || result.seconds === null) return null
+    const normalized = format(result.seconds)
+    return normalized === text.value.trim() ? null : normalized
+  })
 
   watch(model, (value) => {
     if (value === lastEmitted) {
       lastEmitted = undefined
       return
     }
-    text.value = format(value)
-    error.value = null
+    text.value = format(modelSeconds())
+    failure.value = shown.value = null
+    committed = { text: text.value, value }
   })
 
   // Re-render the text when display settings change (e.g. switching locale), unless the user has an error to fix.
   watch(
     () => {
-      const { displayLocale, displayStyle, displayUnits } = toValue(options)
-      return [displayLocale, displayStyle, displayUnits?.join()]
+      const { locale, displayStyle, displayUnits, valueFormat } = settings.value
+      return [locale, displayStyle, displayUnits.join(), valueFormat]
     },
     () => {
-      if (error.value === null) text.value = format(model.value)
+      if (failure.value !== null) return
+      text.value = format(modelSeconds())
+      committed = { text: text.value, value: model.value }
     },
   )
 
-  return { text, error, isValid, preview, onInput, onBlur }
+  const error = computed<ParseErrorCode | null>(() => shown.value?.error ?? null)
+  const rawError = computed<ParseErrorCode | null>(() => failure.value?.error ?? null)
+
+  return {
+    text,
+    /** Current value in seconds. */
+    seconds: computed(modelSeconds),
+    /** The shown error code (see `validateOn`). */
+    error,
+    /** The shown failure, with `token`, `index` and `suggestion`. */
+    errorDetail: computed(() => shown.value),
+    /** The current error, shown or not. */
+    rawError,
+    isValid: computed(() => rawError.value === null),
+    preview,
+    /** Resolved options: bounds and step in seconds, locale, display units. */
+    settings,
+    format,
+    onInput,
+    onBlur: commit,
+    onKeydown,
+    commit,
+    validate,
+    revert,
+    stepBy,
+  }
 }

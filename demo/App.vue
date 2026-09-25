@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import InputText from 'primevue/inputtext'
 import { VTextField } from 'vuetify/components'
 import ShadcnInput from './shadcn/Input.vue'
 import {
+  de,
   DurationInput,
+  en,
   parseDuration,
   primevue,
   vuetify,
   type FormatStyle,
-  type Locale,
   type ParseErrorCode,
+  type Precision,
+  type ValidateOn,
+  type ValueFormat,
 } from '../src'
 
 const minutes = ref<number | null>(null)
 const error = ref<ParseErrorCode | null>(null)
-const displayLocale = ref<Locale>('en')
+const localeCode = ref<'en' | 'de'>('en')
 const displayStyle = ref<FormatStyle>('short')
 const dark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 watchEffect(() => document.documentElement.classList.toggle('dark', dark.value))
@@ -32,7 +36,10 @@ const examples = [
   '0,5 Tage',
   '1:30',
   '2 Stunden 15 Minuten',
+  '1h30',
+  'PT1H30M',
   '45',
+  '5 huors',
   '5 parsecs',
 ]
 
@@ -45,6 +52,16 @@ function pick(example: string) {
 }
 
 const sizes = ['sm', 'md', 'lg'] as const
+const presets = ['15m', '30m', '45m', '1h', '1h 30m', '2h', { label: 'Half a day (4h)', value: '4h' }]
+const valueFormat = ref<Exclude<ValueFormat, object>>('minutes')
+const precision = ref<Precision>('minute')
+const validateOn = ref<ValidateOn>('eager')
+const playground = ref<number | string | null>(90)
+watch([valueFormat, precision], () => (playground.value = null))
+const submitted = ref<string | null>(null)
+function onSubmit(event: Event) {
+  submitted.value = JSON.stringify(Object.fromEntries(new FormData(event.target as HTMLFormElement)))
+}
 const variants = ['outline', 'soft', 'ghost'] as const
 const shared = ref<number | null>(90)
 </script>
@@ -73,7 +90,7 @@ const shared = ref<number | null>(90)
           v-model="minutes"
           size="lg"
           preview
-          :display-locale="displayLocale"
+          :locale="localeCode === 'de' ? de : en"
           :display-style="displayStyle"
           placeholder="e.g. 1h 30m"
           @error="error = $event"
@@ -92,8 +109,8 @@ const shared = ref<number | null>(90)
           <legend class="px-1">Display</legend>
           <label><input v-model="displayStyle" type="radio" value="short" /> short</label>
           <label><input v-model="displayStyle" type="radio" value="long" /> long</label>
-          <label><input v-model="displayLocale" type="radio" value="en" /> English</label>
-          <label><input v-model="displayLocale" type="radio" value="de" /> Deutsch</label>
+          <label><input v-model="localeCode" type="radio" value="en" /> English</label>
+          <label><input v-model="localeCode" type="radio" value="de" /> Deutsch</label>
         </fieldset>
 
         <ul class="grid gap-1 text-sm">
@@ -108,6 +125,57 @@ const shared = ref<number | null>(90)
             <span class="text-zinc-500">→ {{ (r => (r.ok ? `${r.minutes} min` : r.error))(parseDuration(example)) }}</span>
           </li>
         </ul>
+      </section>
+
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold">Keyboard, presets &amp; forms</h2>
+        <p class="text-sm text-zinc-500">
+          <kbd>↑</kbd>/<kbd>↓</kbd> step 15min, with <kbd>Shift</kbd> 1h, <kbd>PgUp</kbd>/<kbd>PgDn</kbd> 1d.
+          <kbd>Enter</kbd> normalizes, <kbd>Esc</kbd> reverts. Presets open on focus while empty or with
+          <kbd>Alt</kbd>+<kbd>↓</kbd>.
+        </p>
+        <fieldset class="flex flex-wrap gap-x-4 gap-y-2 rounded-lg border border-zinc-500/30 p-3 text-sm">
+          <legend class="px-1">Options</legend>
+          <label>
+            valueFormat
+            <select v-model="valueFormat" class="rounded border border-zinc-500/30 bg-transparent">
+              <option v-for="f in ['minutes', 'seconds', 'ms', 'iso']" :key="f" :value="f">{{ f }}</option>
+            </select>
+          </label>
+          <label>
+            precision
+            <select v-model="precision" class="rounded border border-zinc-500/30 bg-transparent">
+              <option value="minute">minute</option>
+              <option value="second">second</option>
+            </select>
+          </label>
+          <label>
+            validateOn
+            <select v-model="validateOn" class="rounded border border-zinc-500/30 bg-transparent">
+              <option v-for="v in ['eager', 'blur', 'input']" :key="v" :value="v">{{ v }}</option>
+            </select>
+          </label>
+        </fieldset>
+        <form class="space-y-2" @submit.prevent="onSubmit">
+          <label for="playground" class="block text-sm font-medium">Estimate</label>
+          <DurationInput
+            id="playground"
+            v-model="playground"
+            name="estimate"
+            :presets="presets"
+            :value-format="valueFormat"
+            :precision="precision"
+            :validate-on="validateOn"
+            max="1w"
+            preview
+            placeholder="e.g. 1h30"
+          />
+          <div class="flex items-center gap-3 text-sm">
+            <button type="submit" class="rounded border border-zinc-500/30 px-3 py-1 hover:bg-zinc-500/10">Submit</button>
+            <span class="font-mono">v-model: {{ JSON.stringify(playground) }}</span>
+            <span v-if="submitted" class="font-mono text-zinc-500">FormData: {{ submitted }}</span>
+          </div>
+        </form>
       </section>
 
       <section class="space-y-4">
@@ -126,7 +194,7 @@ const shared = ref<number | null>(90)
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           <DurationInput v-model="shared" disabled />
-          <DurationInput :model-value="null" required :min="30" :max="480" placeholder="30min – 8h, required" preview>
+          <DurationInput :model-value="null" required min="30m" max="8h" placeholder="30min – 8h, required" preview>
             <template #trailing>
               <span class="text-xs">max 8h</span>
             </template>

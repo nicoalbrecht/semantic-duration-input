@@ -4,23 +4,16 @@ import { DURATION_INPUT_DEFAULTS, type DurationInputDefaults } from './config'
 import './styles/style.css'
 
 export { DurationInput }
-export type { DurationInputSlotProps } from './components/DurationInput.vue'
-export { parseDuration } from './core/parse'
-export type { ParseErrorCode, ParseOptions, ParseResult } from './core/parse'
-export { formatDuration } from './core/format'
-export type { FormatOptions, FormatStyle } from './core/format'
-export { ERROR_MESSAGES, formatErrorMessage } from './core/messages'
-export type { ErrorMessageOptions, ErrorMessages } from './core/messages'
-export { LOCALE_ALIASES, UNIT_MINUTES } from './core/units'
-export type { Locale, UnitAliases, UnitKey } from './core/units'
+export type { DurationInputSlotProps, DurationPresetItem } from './components/DurationInput.vue'
+export * from './core/index'
 export { useDurationInput } from './composables/useDurationInput'
-export type { DurationInputOptions } from './composables/useDurationInput'
+export type { DurationInputOptions, ValidateOn } from './composables/useDurationInput'
 export { durationInputTheme } from './theme'
 export type { DurationInputPart, DurationInputSize, DurationInputVariant, DurationInputVariants } from './theme'
 export { nuxtUi, primevue, vuetify } from './adapters'
 export type { InvalidPropsFn, InvalidState } from './adapters'
 export { DURATION_INPUT_DEFAULTS } from './config'
-export type { DurationInputDefaults, DurationInputProps, DurationInputUi } from './config'
+export type { DurationInputDefaults, DurationInputProps, DurationInputUi, DurationPreset } from './config'
 
 /**
  * Registers `<DurationInput>` globally: `app.use(plugin)`.

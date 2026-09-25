@@ -1,53 +1,47 @@
 import { formatDuration } from './format'
-import type { ParseErrorCode } from './parse'
-import type { Locale } from './units'
+import type { DurationLocale, MessageKey, ParseErrorCode } from './locale'
+import { en } from './locales/en'
+import type { ParseFailure } from './parse'
+import type { UnitKey } from './units'
 
-export type ErrorMessages = Partial<Record<ParseErrorCode, string>>
-
-/**
- * Default error texts. `{min}` and `{max}` in `out_of_range` are replaced with the formatted bounds.
- * `out_of_range_min` / `out_of_range_max` are used when only one bound is set.
- */
-export const ERROR_MESSAGES: Record<Locale, Record<ParseErrorCode | 'out_of_range_min' | 'out_of_range_max', string>> = {
-  en: {
-    empty: 'Please enter a duration.',
-    invalid_format: 'Enter a duration like "1h 30m" or "1:30".',
-    unknown_unit: 'Unknown unit. Use minutes, hours, days or weeks.',
-    missing_unit: 'Add a unit, e.g. "45min" or "2h".',
-    out_of_range: 'Must be between {min} and {max}.',
-    out_of_range_min: 'Must be at least {min}.',
-    out_of_range_max: 'Must be at most {max}.',
-  },
-  de: {
-    empty: 'Bitte gib eine Dauer ein.',
-    invalid_format: 'Gib eine Dauer wie „1h 30m“ oder „1:30“ ein.',
-    unknown_unit: 'Unbekannte Einheit. Erlaubt sind Minuten, Stunden, Tage oder Wochen.',
-    missing_unit: 'Gib eine Einheit an, z. B. „45min“ oder „2h“.',
-    out_of_range: 'Muss zwischen {min} und {max} liegen.',
-    out_of_range_min: 'Muss mindestens {min} sein.',
-    out_of_range_max: 'Darf höchstens {max} sein.',
-  },
-}
+export type ErrorMessages = Partial<Record<MessageKey, string>>
 
 export interface ErrorMessageOptions {
-  locale?: Locale
+  locale?: DurationLocale
+  /** Lower bound in seconds, for `{min}`. */
   min?: number
+  /** Upper bound in seconds, for `{max}`. */
   max?: number
-  /** Per-code replacements. They may also use `{min}` and `{max}`. */
+  /** Units used to format the bounds. */
+  units?: UnitKey[]
+  /** Per-key replacements. They may use the same placeholders. */
   overrides?: ErrorMessages
 }
 
-/** Human-readable text for a parse error code. */
-export function formatErrorMessage(code: ParseErrorCode, options: ErrorMessageOptions = {}): string {
-  const { locale = 'en', min, max, overrides } = options
-  const texts = ERROR_MESSAGES[locale]
-  let template = overrides?.[code]
-  if (template === undefined) {
-    if (code !== 'out_of_range') template = texts[code]
-    else if (min === undefined) template = texts.out_of_range_max
-    else if (max === undefined) template = texts.out_of_range_min
-    else template = texts.out_of_range
-  }
-  const bound = (minutes: number | undefined) => (minutes === undefined ? '' : formatDuration(minutes, { locale }))
-  return template.replace('{min}', bound(min)).replace('{max}', bound(max))
+/**
+ * Human-readable text for a parse error. Pass the whole failure to get `{token}` and `{suggestion}` filled in.
+ * `unknown_unit` uses `unknown_unit_suggestion` when there is a suggestion; `out_of_range` uses
+ * `out_of_range_min` / `out_of_range_max` when only one bound is set. Overrides of the base key apply to its variants.
+ */
+export function formatErrorMessage(error: ParseErrorCode | ParseFailure, options: ErrorMessageOptions = {}): string {
+  const failure: Omit<ParseFailure, 'ok'> = typeof error === 'string' ? { error } : error
+  const { locale = en, min, max, units, overrides } = options
+
+  const keys = messageKeys(failure.error, failure.suggestion !== undefined, min, max)
+  const template = keys.map((key) => overrides?.[key]).find((text) => text !== undefined) ?? locale.messages[keys[0]]
+
+  const bound = (seconds: number | undefined) => (seconds === undefined ? '' : formatDuration(seconds, { locale, units }))
+  return template
+    .replace('{min}', bound(min))
+    .replace('{max}', bound(max))
+    .replace('{token}', failure.token ?? '')
+    .replace('{suggestion}', failure.suggestion ?? '')
+}
+
+/** Keys to look up, most specific first. */
+function messageKeys(code: ParseErrorCode, hasSuggestion: boolean, min?: number, max?: number): MessageKey[] {
+  if (code === 'unknown_unit' && hasSuggestion) return ['unknown_unit_suggestion', 'unknown_unit']
+  if (code === 'out_of_range' && min === undefined) return ['out_of_range_max', 'out_of_range']
+  if (code === 'out_of_range' && max === undefined) return ['out_of_range_min', 'out_of_range']
+  return [code]
 }

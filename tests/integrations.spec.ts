@@ -11,12 +11,12 @@ import type { Component } from 'vue'
 
 /** Mounts `<DurationInput :as>` with a working v-model. */
 function mountAs(as: Component, invalidProps: InvalidPropsFn, plugins: unknown[]) {
-  const wrapper = mount(DurationInput, {
+  const wrapper: ReturnType<typeof mount<typeof DurationInput>> = mount(DurationInput, {
     props: {
       as,
       invalidProps,
       modelValue: null,
-      'onUpdate:modelValue': (value: number | null) => wrapper.setProps({ modelValue: value }),
+      'onUpdate:modelValue': (value: number | string | null): unknown => wrapper.setProps({ modelValue: value }),
     },
     global: { plugins: plugins as never },
     attachTo: document.body,
@@ -33,6 +33,7 @@ describe('PrimeVue InputText', () => {
     await input.trigger('blur')
     expect(input.element.value).toBe('7d 21h')
     await input.setValue('2 parsecs')
+    await input.trigger('blur')
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(wrapper.findComponent(InputText).props('invalid')).toBe(true)
     wrapper.unmount()
@@ -49,6 +50,8 @@ describe('Vuetify VTextField', () => {
     await input.trigger('blur')
     expect(input.element.value).toBe('7d 21h')
     await input.setValue('45')
+    await input.trigger('focus')
+    await input.trigger('blur')
     const field = wrapper.findComponent(VTextField)
     expect(field.props('error')).toBe(true)
     expect(field.props('errorMessages')).toBe('Add a unit, e.g. "45min" or "2h".')

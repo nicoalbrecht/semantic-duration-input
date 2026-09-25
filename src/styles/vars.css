@@ -13,5 +13,6 @@
     --sdi-invalid: var(--destructive, var(--ui-error, #dc2626));
     --sdi-muted: var(--muted-foreground, var(--ui-text-muted, color-mix(in oklab, currentColor 55%, transparent)));
     --sdi-soft: var(--muted, var(--ui-bg-elevated, color-mix(in oklab, currentColor 8%, transparent)));
+    --sdi-popover: var(--popover, var(--ui-bg, Canvas));
   }
 }

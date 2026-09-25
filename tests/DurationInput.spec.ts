@@ -1,13 +1,14 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import DurationInput from '../src/components/DurationInput.vue'
+import { de } from '../src'
 
 /** Mounts with a working v-model: emitted values are fed back as the `modelValue` prop. */
 function mountInput() {
-  const wrapper = mount(DurationInput, {
+  const wrapper: ReturnType<typeof mount<typeof DurationInput>> = mount(DurationInput, {
     props: {
       modelValue: null,
-      'onUpdate:modelValue': (value: number | null) => wrapper.setProps({ modelValue: value }),
+      'onUpdate:modelValue': (value: number | string | null): unknown => wrapper.setProps({ modelValue: value }),
     },
   })
   return wrapper
@@ -24,6 +25,7 @@ describe('DurationInput', () => {
     const wrapper = mount(DurationInput, { props: { modelValue: 30 } })
     const input = wrapper.find('input')
     await input.setValue('2 parsecs')
+    await input.trigger('blur')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     expect(input.attributes('aria-invalid')).toBe('true')
     expect(wrapper.find('[data-slot=root]').attributes('data-invalid')).toBe('true')
@@ -34,6 +36,7 @@ describe('DurationInput', () => {
     const wrapper = mount(DurationInput, { props: { modelValue: null } })
     const input = wrapper.find('input')
     await input.setValue('2')
+    await input.trigger('blur')
     expect(input.attributes('aria-invalid')).toBe('true')
     await input.setValue('2h')
     expect(input.attributes('aria-invalid')).toBeUndefined()
@@ -85,7 +88,7 @@ describe('DurationInput', () => {
     const wrapper = mount(DurationInput, { props: { modelValue: 90, displayStyle: 'long' } })
     const input = wrapper.find('input')
     expect(input.element.value).toBe('1 hour 30 minutes')
-    await wrapper.setProps({ displayLocale: 'de' })
+    await wrapper.setProps({ locale: de })
     expect(input.element.value).toBe('1 Stunde 30 Minuten')
   })
 
