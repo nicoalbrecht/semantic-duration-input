@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.0...v0.2.1) (2026-09-25)
+
+
+### Features
+
+* Add formatPreview prop for custom preview text ([#4](https://github.com/nicoalbrecht/semantic-duration-input/issues/4)) ([5e0023d](https://github.com/nicoalbrecht/semantic-duration-input/commit/5e0023dd30df977149301b8ab09cfc935c51625d))
+
+
+### Fixes
+
+* address code review findings ([#2](https://github.com/nicoalbrecht/semantic-duration-input/issues/2)) ([48e0f1a](https://github.com/nicoalbrecht/semantic-duration-input/commit/48e0f1a1a4caeba827c0ec71ae0d7764fb9dce03))
+
 ## 0.2.0 (2026-09-25)
 
 ### Breaking changes
