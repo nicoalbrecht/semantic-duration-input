@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.3.0...v0.3.1) (2026-09-26)
+
+
+### Features
+
+* custom units ([#17](https://github.com/nicoalbrecht/semantic-duration-input/issues/17)) ([2042a30](https://github.com/nicoalbrecht/semantic-duration-input/commit/2042a303e64dcebe2b93de6cb457ae5f2badc20c))
+
 ## [0.3.0](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.2.2...v0.3.0) (2026-09-25)
 
 
