@@ -66,7 +66,7 @@ export function durationSchema<Output = number | null>(
             ? checkRange(stored, min, max)
             : { ok: false, error: 'invalid_format' }
         if (!parsed.ok) {
-          return { issues: [{ message: formatErrorMessage(parsed, { locale, min, max, overrides: messages }) }] }
+          return { issues: [{ message: formatErrorMessage(parsed, { locale, min, max, customUnits: options.customUnits, overrides: messages }) }] }
         }
         return { value: toModelValue(parsed.seconds, valueFormat) as Output }
       },

@@ -43,11 +43,11 @@ export type DurationAmount = number | string
 export function resolveAmount(
   amount: DurationAmount | undefined,
   format: ValueFormat = 'minutes',
-  options: Pick<ParseOptions, 'locales'> = {},
+  options: Pick<ParseOptions, 'locales' | 'customUnits'> = {},
 ): number | undefined {
   if (amount === undefined) return undefined
   if (typeof amount === 'string') {
-    const result = parseDuration(amount, { locales: options.locales, precision: 'second' })
+    const result = parseDuration(amount, { locales: options.locales, customUnits: options.customUnits, precision: 'second' })
     return result.ok && result.seconds !== null ? result.seconds : undefined
   }
   // Numbers are minutes for 'iso', which has no numeric model value.

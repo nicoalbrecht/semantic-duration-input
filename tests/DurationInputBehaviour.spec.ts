@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 import DurationInput from '../src/components/DurationInput.vue'
-import { en, type DurationInputProps } from '../src'
+import { en, plugin, type CustomUnits, type DurationInputProps } from '../src'
 
 /** Mounts with a working v-model: emitted values are fed back as the `modelValue` prop. */
 function mountInput(props: DurationInputProps & { modelValue?: number | string | null } = {}, attrs = {}) {
@@ -272,6 +272,73 @@ describe('bounds', () => {
     } finally {
       spy.mockRestore()
     }
+  })
+})
+
+describe('customUnits', () => {
+  const agile: CustomUnits = {
+    sprint: { seconds: 14 * 86400, aliases: ['sprints'], labels: { short: 'sp', long: ['sprint', 'sprints'] } },
+  }
+  const workingTime: CustomUnits = { day: 8 * 3600, week: 5 * 8 * 3600 }
+
+  it('parses and normalizes custom units, with a preview', async () => {
+    const wrapper = mountInput({ customUnits: agile, displayUnits: ['sprint', 'day'], preview: true })
+    const input = wrapper.find('input')
+    await input.setValue('2 sprints 3d')
+    expect(wrapper.props('modelValue')).toBe(31 * 1440)
+    expect(wrapper.find('[data-slot=preview]').text()).toBe('= 2sp 3d')
+    await input.trigger('blur')
+    expect(input.element.value).toBe('2sp 3d')
+  })
+
+  it('steps a configured day with PageUp', async () => {
+    const wrapper = mountInput({ modelValue: 60, customUnits: workingTime })
+    await key(wrapper, 'PageUp')
+    expect(wrapper.props('modelValue')).toBe(480)
+    expect(wrapper.find('input').element.value).toBe('1d')
+    await key(wrapper, 'PageUp')
+    expect(wrapper.props('modelValue')).toBe(960)
+  })
+
+  it('accepts bounds and presets in custom units', async () => {
+    const wrapper = mountInput({ customUnits: agile, displayUnits: ['sprint', 'day'], min: '1 sprint', presets: ['2 sprints'] })
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    expect(wrapper.findAll('[role=option]').map((option) => option.text())).toEqual(['2sp'])
+    await input.setValue('3d')
+    await input.trigger('blur')
+    expect(wrapper.find('[data-slot=message]').text()).toBe('Must be at least 1sp.')
+  })
+
+  it('takes customUnits from the app-wide defaults', async () => {
+    const wrapper = mount(DurationInput, {
+      props: { modelValue: null },
+      global: { plugins: [[plugin, { customUnits: workingTime }] as [typeof plugin, object]] },
+    })
+    await wrapper.find('input').setValue('1d')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[480]])
+  })
+
+  it('does not rewrite the text while typing when customUnits is an inline object', async () => {
+    const Parent = defineComponent(() => {
+      const value = ref<unknown>(null)
+      return () =>
+        h('div', [
+          h('span', String(value.value)),
+          h(DurationInput, {
+            modelValue: value.value as number | null,
+            'onUpdate:modelValue': (v: unknown) => (value.value = v),
+            customUnits: { day: 8 * 3600 },
+          }),
+        ])
+    })
+    const wrapper = mount(Parent)
+    await wrapper.find('input').setValue('1d3')
+    await nextTick()
+    expect(wrapper.find('span').text()).toBe('660')
+    expect(wrapper.find('input').element.value).toBe('1d3')
+    await wrapper.find('input').trigger('blur')
+    expect(wrapper.find('input').element.value).toBe('1d 3h')
   })
 })
 

@@ -3,7 +3,17 @@ import { buildAliasMap, type DurationLocale, type ParseErrorCode } from './local
 import { de } from './locales/de'
 import { en } from './locales/en'
 import { suggest } from './suggest'
-import { UNIT_SECONDS, unitsFor, type Precision, type UnitKey } from './units'
+import {
+  nextSmallerBuiltIn,
+  resolveUnits,
+  unitSeconds,
+  unitsFor,
+  UNIT_SECONDS,
+  type CustomUnits,
+  type Precision,
+  type ResolvedUnits,
+  type UnitName,
+} from './units'
 
 export type { ParseErrorCode }
 
@@ -37,7 +47,12 @@ export interface ParseOptions {
   /** A bare number after the last unit takes the next smaller unit: `1h30` is 1h 30min. Defaults to `true`. */
   implicitUnits?: boolean
   /** Unit for input that is only a number, e.g. `'minute'` makes `45` mean 45 minutes. */
-  defaultUnit?: UnitKey
+  defaultUnit?: UnitName
+  /**
+   * Units of your own (`sprint`, `workday`) and other lengths for `day` and `week`, e.g. `{ day: 8 * 3600 }`.
+   * ISO 8601 and clock input (`1:30`) always use the standard lengths.
+   */
+  customUnits?: CustomUnits
   /** Inclusive lower bound in seconds. */
   min?: number
   /** Inclusive upper bound in seconds. */
@@ -75,6 +90,9 @@ const toNumber = (text: string) => Number(text.replace(',', '.'))
  * parseDuration('2 huors') // { ok: false, error: 'unknown_unit', token: 'huors', index: 2, suggestion: 'hours' }
  */
 export function parseDuration(input: string, options: ParseOptions = {}): ParseResult {
+  // Resolved before anything else, so an invalid configuration throws for every input.
+  const units = resolveUnits(options.customUnits)
+  const defaultLength = options.defaultUnit && unitSeconds(options.defaultUnit, units, 'parseDuration')
   const offset = input.length - input.trimStart().length
   const raw = input.trim()
   if (raw === '') {
@@ -85,11 +103,11 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
 
   const precision = options.precision ?? 'minute'
   let total = parseClock(raw, precision) ?? fromIso(raw)
-  if (total === null && options.defaultUnit && NUMBER_RE.test(raw)) {
-    total = toNumber(raw) * UNIT_SECONDS[options.defaultUnit]
+  if (total === null && defaultLength && NUMBER_RE.test(raw)) {
+    total = toNumber(raw) * defaultLength
   }
   if (total === null) {
-    const result = parseTokens(raw, options)
+    const result = parseTokens(raw, options, units)
     if (typeof result !== 'number') {
       return result.index === undefined ? result : { ...result, index: result.index + offset }
     }
@@ -116,10 +134,9 @@ function parseClock(text: string, precision: Precision): number | null {
 
 // Works on the raw text and lowercases single words for lookups: lowercasing the whole text can change
 // its length (e.g. "İ"), which would shift the reported indices.
-function parseTokens(raw: string, options: ParseOptions): number | ParseFailure {
+function parseTokens(raw: string, options: ParseOptions, resolved: ResolvedUnits): number | ParseFailure {
   const locales = options.locales ?? DEFAULT_LOCALES
-  const units = unitsFor(options.precision)
-  const aliases = buildAliasMap(locales, units)
+  const aliases = buildAliasMap(locales, unitsFor(options.precision, resolved), resolved)
   const separators = new Set(locales.flatMap((locale) => locale.separators ?? []).map((word) => word.toLowerCase()))
   const fail = (error: ParseErrorCode, index: number, length: number, extra: Partial<ParseFailure> = {}): ParseFailure => ({
     ok: false,
@@ -137,7 +154,7 @@ function parseTokens(raw: string, options: ParseOptions): number | ParseFailure 
 
   let total = 0
   let cursor = 0
-  let lastUnit: UnitKey | undefined
+  let lastUnit: string | undefined
 
   for (const match of raw.matchAll(TOKEN_RE)) {
     const [stray] = strayParts(cursor, match.index)
@@ -150,7 +167,7 @@ function parseTokens(raw: string, options: ParseOptions): number | ParseFailure 
       return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(word.toLowerCase(), aliases.keys()) })
     }
 
-    total += toNumber(match[1]) * UNIT_SECONDS[unit]
+    total += toNumber(match[1]) * resolved.seconds.get(unit)!
     cursor = match.index + match[0].length
     lastUnit = unit
   }
@@ -160,15 +177,16 @@ function parseTokens(raw: string, options: ParseOptions): number | ParseFailure 
     const [first] = trailing
     const isNumber = NUMBER_RE.test(first.word)
     if (!isNumber) return fail('invalid_format', first.index, first.word.length)
-    // `1h30`: a single trailing number takes the unit below the last one.
-    const next = lastUnit && options.implicitUnits !== false ? units[units.indexOf(lastUnit) + 1] : undefined
+    // `1h30`: a single trailing number takes the built-in unit below the last one.
+    const next =
+      lastUnit && options.implicitUnits !== false ? nextSmallerBuiltIn(lastUnit, options.precision, resolved) : undefined
     if (!next) return fail('missing_unit', first.index, first.word.length)
     // Only one trailing number can take the implicit unit: report the extra one.
     if (trailing.length > 1) {
       const [, second] = trailing
       return fail(NUMBER_RE.test(second.word) ? 'missing_unit' : 'invalid_format', second.index, second.word.length)
     }
-    total += toNumber(first.word) * UNIT_SECONDS[next]
+    total += toNumber(first.word) * resolved.seconds.get(next)!
     lastUnit = next
   }
 

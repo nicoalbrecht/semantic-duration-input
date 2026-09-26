@@ -14,9 +14,10 @@ import { DurationInput } from 'semantic-duration-input'
 | `locales` | `DurationLocale[]` | `[en, de]` | Which unit names and separator words are accepted, see [Locales](../guide/locales) |
 | `locale` | `DurationLocale` | first of `locales` | Language of the normalized text and the messages |
 | `displayStyle` | `'short' \| 'long'` | `'short'` | `1d 2h 30min` vs `1 day 2 hours 30 minutes` |
-| `displayUnits` | `UnitKey[]` | `['day', 'hour', 'minute']` (+ `'second'`) | Units used in the normalized text |
+| `displayUnits` | `UnitName[]` | `['day', 'hour', 'minute']` (+ `'second'`) | Units used in the normalized text, including custom ones |
 | `implicitUnits` | `boolean` | `true` | `1h30` means 1h 30min |
-| `defaultUnit` | `UnitKey` | – | Unit for a bare number, e.g. `'minute'` |
+| `defaultUnit` | `UnitName` | – | Unit for a bare number, e.g. `'minute'` |
+| `customUnits` | `CustomUnits` | – | Units of your own and other lengths for `day` and `week`, see [Custom units](../guide/units) |
 | `min` / `max` | `number \| string` | – | Inclusive bounds: a number in the model's unit, or text like `'8h'` (`out_of_range`) |
 | `step` | `number \| string \| false` | `'15m'` | Arrow-key step |
 | `snapToStep` | `boolean` | `false` | Round to the nearest `step` on blur/Enter |

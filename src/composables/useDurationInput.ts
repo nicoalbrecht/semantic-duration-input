@@ -3,7 +3,7 @@ import { DEFAULT_DISPLAY_UNITS, formatDuration, type FormatStyle } from '../core
 import type { DurationLocale } from '../core/locale'
 import { en } from '../core/locales/en'
 import { DEFAULT_LOCALES, parseDuration, type ParseErrorCode, type ParseFailure, type ParseOptions } from '../core/parse'
-import { UNIT_SECONDS, type UnitKey } from '../core/units'
+import { resolveUnits, UNIT_SECONDS, type UnitName } from '../core/units'
 import { fromModelValue, resolveAmount, toModelValue, type DurationAmount, type ValueFormat } from '../core/value'
 
 /**
@@ -38,7 +38,7 @@ export interface DurationInputOptions extends Omit<ParseOptions, 'min' | 'max'> 
   /** `'short'` ("1h 30min") or `'long'` ("1 hour 30 minutes"). Defaults to `'short'`. */
   displayStyle?: FormatStyle
   /** Units of the normalized text. Defaults to days, hours and minutes (plus seconds with second precision). */
-  displayUnits?: UnitKey[]
+  displayUnits?: UnitName[]
   /** Inclusive lower bound: a number in the model's unit, or a duration text like `'30m'`. */
   min?: DurationAmount
   /** Inclusive upper bound, like `min`. */
@@ -71,13 +71,18 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     const o = toValue(options)
     const valueFormat = o.valueFormat ?? 'minutes'
     const locales = o.locales ?? DEFAULT_LOCALES
-    const amount = (value: DurationAmount | undefined) => resolveAmount(value, valueFormat, { locales })
+    const { customUnits } = o
+    const amount = (value: DurationAmount | undefined) => resolveAmount(value, valueFormat, { locales, customUnits })
+    const displayUnits: UnitName[] =
+      o.displayUnits ?? (o.precision === 'second' ? [...DEFAULT_DISPLAY_UNITS, 'second'] : DEFAULT_DISPLAY_UNITS)
     return {
       ...o,
       valueFormat,
       locales,
       locale: o.locale ?? locales[0] ?? en,
-      displayUnits: o.displayUnits ?? (o.precision === 'second' ? [...DEFAULT_DISPLAY_UNITS, 'second'] : DEFAULT_DISPLAY_UNITS),
+      displayUnits,
+      /** All units with their lengths, after `customUnits`. Resolving here reports an invalid configuration right away. */
+      units: resolveUnits(customUnits),
       min: amount(o.min),
       max: amount(o.max),
       step: o.step === false ? undefined : amount(o.step ?? '15m'),
@@ -97,8 +102,8 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
 
   const format = (seconds: number | null) => {
     if (seconds === null) return ''
-    const { locale, displayStyle, displayUnits } = settings.value
-    return formatDuration(seconds, { locale, style: displayStyle, units: displayUnits })
+    const { locale, displayStyle, displayUnits, customUnits } = settings.value
+    return formatDuration(seconds, { locale, style: displayStyle, units: displayUnits, customUnits })
   }
 
   const modelSeconds = () => fromModelValue(model.value, settings.value.valueFormat)
@@ -120,6 +125,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
       precision: s.precision,
       implicitUnits: s.implicitUnits,
       defaultUnit: s.defaultUnit,
+      customUnits: s.customUnits,
       required: s.required,
       min: s.clamp || !withRange ? undefined : s.min,
       max: s.clamp || !withRange ? undefined : s.max,
@@ -215,7 +221,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     if (direction !== undefined) {
       const { step } = settings.value
       if (!step) return
-      const size = event.key.startsWith('Page') ? UNIT_SECONDS.day : event.shiftKey ? UNIT_SECONDS.hour : step
+      const size = event.key.startsWith('Page') ? settings.value.units.seconds.get('day')! : event.shiftKey ? UNIT_SECONDS.hour : step
       event.preventDefault()
       stepBy(direction, size)
     } else if (event.key === 'Enter') {
@@ -261,8 +267,8 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
   // and reformatting then would rewrite the text mid-typing.
   watch(
     () => {
-      const { locale, displayStyle, displayUnits, valueFormat } = settings.value
-      return [locale, displayStyle, displayUnits.join(), valueFormat]
+      const { locale, displayStyle, displayUnits, valueFormat, customUnits } = settings.value
+      return [locale, displayStyle, displayUnits.join(), valueFormat, customUnits]
     },
     () => {
       if (failure.value !== null || text.value !== committed.text) return
@@ -291,7 +297,7 @@ export function useDurationInput(model: Ref<unknown>, options: MaybeRefOrGetter<
     isValid: computed(() => rawError.value === null),
     /** Normalized form of the text (or `formatPreview`'s output) while it differs from what was typed, else `null`. */
     preview,
-    /** Resolved options: bounds and step in seconds, locale, display units. */
+    /** Resolved options: bounds and step in seconds, locale, display units, and all units with their lengths. */
     settings,
     /** Formats seconds with the current locale and display options. */
     format,

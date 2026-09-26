@@ -54,6 +54,8 @@ const hu = defineLocale({
 - **Labels:** without `labels`, the text is formatted with `Intl.DurationFormat` using `code`, falling back to English labels where that API isn't available. Make sure the parser can read what the formatter writes: add the words it produces to `aliases` and `separators`.
 - **Messages** may use `{min}`, `{max}`, `{token}` and `{suggestion}`. See [Error messages](./forms#error-messages) for the keys.
 
+Locales can also name and label [custom units](./units#translations).
+
 To add aliases to a built-in language, spread it:
 
 ```ts

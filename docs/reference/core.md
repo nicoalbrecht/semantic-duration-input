@@ -24,6 +24,7 @@ parseDuration('9h', { max: 8 * 3600 }) // { ok: false, error: 'out_of_range' }
 | `precision` | `'minute'` | `'second'` accepts seconds; results are rounded to the precision |
 | `implicitUnits` | `true` | `1h30` means 1h 30min |
 | `defaultUnit` | – | Unit for a bare number |
+| `customUnits` | – | Units of your own and other lengths for `day` and `week`, see [Custom units](../guide/units) |
 | `min`, `max` | – | Inclusive bounds in seconds |
 | `required` | `false` | Empty input is an `empty` failure instead of `null` |
 
@@ -45,9 +46,10 @@ formatDuration(5400, { units: ['hour'] })             // '1.5h'
 | --- | --- | --- |
 | `locale` | `en` | Labels to use. Locales without `labels` use `Intl.DurationFormat` |
 | `style` | `'short'` | `'short'` or `'long'` |
-| `units` | `['day', 'hour', 'minute']` | Units to decompose into. The smallest one takes the rest, as a decimal if needed |
+| `units` | `['day', 'hour', 'minute']` | Units to decompose into, custom ones included. The smallest one takes the rest, as a decimal if needed |
+| `customUnits` | – | See [Custom units](../guide/units) |
 
-Throws a `RangeError` for negative, `NaN` or infinite input.
+Throws a `RangeError` for negative, `NaN` or infinite input, and an `Error` for an unknown unit in `units`.
 
 ## `formatErrorMessage(error, options?)`
 
@@ -63,6 +65,7 @@ formatErrorMessage('out_of_range', { min: 1800, max: 28800 }) // 'Must be betwee
 | `locale` | Language, default `en` |
 | `min`, `max` | Bounds in seconds, for `{min}` and `{max}`. Which is set also picks `out_of_range_min` / `out_of_range_max` |
 | `units` | Units to format the bounds with |
+| `customUnits` | See [Custom units](../guide/units) |
 | `overrides` | Replacement texts per key, see [Error messages](../guide/forms#error-messages) |
 
 ## `durationSchema(options?)`
@@ -88,7 +91,7 @@ These convert between seconds and a `valueFormat`. They're used by the component
 | --- | --- |
 | `toModelValue(seconds, format)` | Seconds → model value. `null` stays `null` |
 | `fromModelValue(value, format)` | Model value → seconds, or `null` when empty or not a duration (including negative numbers) |
-| `resolveAmount(amount, format, { locales })` | A bound or step (number in the model's unit, or text like `'8h'`) → seconds, or `undefined` if invalid |
+| `resolveAmount(amount, format, { locales, customUnits })` | A bound or step (number in the model's unit, or text like `'8h'`) → seconds, or `undefined` if invalid |
 
 ## Locales
 
@@ -102,7 +105,7 @@ These convert between seconds and a `valueFormat`. They're used by the component
 
 | Export | |
 | --- | --- |
-| `UNIT_SECONDS` | Length of each unit in seconds: `{ second: 1, minute: 60, hour: 3600, day: 86400, week: 604800 }` |
+| `UNIT_SECONDS` | Standard length of each built-in unit in seconds: `{ second: 1, minute: 60, hour: 3600, day: 86400, week: 604800 }` |
 | `UNITS_DESC` | `['week', 'day', 'hour', 'minute', 'second']` |
 | `DEFAULT_DISPLAY_UNITS` | `['day', 'hour', 'minute']` |
 
@@ -115,5 +118,7 @@ These convert between seconds and a `valueFormat`. They're used by the component
 | `ErrorMessageOptions`, `ErrorMessages`, `MessageKey` | `formatErrorMessage` and the `messages` prop |
 | `DurationLocale` | A locale |
 | `UnitKey`, `Precision` | `'second' \| 'minute' \| 'hour' \| 'day' \| 'week'`, `'minute' \| 'second'` |
+| `UnitName` | A `UnitKey` or the name of a custom unit |
+| `CustomUnits`, `CustomUnit` | `customUnits`, see [Custom units](../guide/units) |
 | `ValueFormat`, `CustomValueFormat`, `DurationAmount` | `valueFormat`, and a bound or step |
 | `DurationSchemaOptions`, `StandardSchemaV1`, `StandardSchemaResult` | `durationSchema` |

@@ -28,6 +28,7 @@ export default defineConfig({
           { text: 'Behaviour', link: '/guide/behaviour' },
           { text: 'Value formats', link: '/guide/value-formats' },
           { text: 'Locales', link: '/guide/locales' },
+          { text: 'Custom units', link: '/guide/units' },
           { text: 'Forms and validation', link: '/guide/forms' },
           { text: 'Styling', link: '/guide/styling' },
           { text: 'Integrations', link: '/guide/integrations' },

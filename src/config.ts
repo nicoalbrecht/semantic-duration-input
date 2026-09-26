@@ -5,7 +5,7 @@ import type { PreviewFormatter, ValidateOn } from './composables/useDurationInpu
 import type { FormatStyle } from './core/format'
 import type { DurationLocale } from './core/locale'
 import type { ErrorMessages } from './core/messages'
-import type { Precision, UnitKey } from './core/units'
+import type { CustomUnits, Precision, UnitName } from './core/units'
 import type { DurationAmount, ValueFormat } from './core/value'
 import type { DurationInputPart, DurationInputSize, DurationInputVariant } from './theme'
 
@@ -33,7 +33,7 @@ export interface DurationInputProps {
    * Units of the normalized text.
    * @default ['day', 'hour', 'minute'], plus 'second' with `precision="second"`
    */
-  displayUnits?: UnitKey[]
+  displayUnits?: UnitName[]
   /**
    * How `v-model` stores durations: `'minutes'`, `'seconds'`, `'ms'`, `'iso'` or a custom conversion.
    * @default 'minutes'
@@ -50,7 +50,12 @@ export interface DurationInputProps {
    */
   implicitUnits?: boolean
   /** Unit for a bare number, e.g. `'minute'` makes `45` mean 45 minutes. */
-  defaultUnit?: UnitKey
+  defaultUnit?: UnitName
+  /**
+   * Units of your own (`sprint`, `workday`) and other lengths for `day` and `week`, e.g. `{ day: 8 * 3600 }`.
+   * A prop replaces the app-wide default instead of merging with it.
+   */
+  customUnits?: CustomUnits
   /** Inclusive lower bound: a number in the model's unit, or a duration text like `'30m'`. Invalid text is ignored. */
   min?: DurationAmount
   /** Inclusive upper bound: a number in the model's unit, or a duration text like `'8h'`. Invalid text is ignored. */
