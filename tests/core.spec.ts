@@ -78,6 +78,13 @@ describe('model values', () => {
     expect(resolveAmount('nope')).toBeUndefined()
     expect(resolveAmount(undefined)).toBeUndefined()
   })
+
+  it('resolves amounts with custom units', () => {
+    const customUnits = { day: 8 * 3600, sprint: 10 * 8 * 3600 }
+    expect(resolveAmount('2 sprint', 'minutes', { customUnits })).toBe(576000)
+    expect(resolveAmount('1d', 'minutes', { customUnits })).toBe(28800)
+    expect(resolveAmount('2 sprint')).toBeUndefined()
+  })
 })
 
 describe('durationSchema', () => {
@@ -98,6 +105,12 @@ describe('durationSchema', () => {
     expect(validate(durationSchema({ min: 30 }), 45)).toEqual({ value: 45 })
     expect(validate(durationSchema({ min: 30 }), 15)).toEqual({ issues: [{ message: 'Must be at least 30min.' }] })
     expect(validate(durationSchema(), {})).toMatchObject({ issues: [{}] })
+  })
+
+  it('parses and reports bounds with custom units', () => {
+    const schema = durationSchema({ customUnits: { day: 8 * 3600 }, max: '3d' })
+    expect(validate(schema, '2d 8h')).toEqual({ value: 1440 })
+    expect(validate(schema, '4d')).toEqual({ issues: [{ message: 'Must be at most 3d.' }] })
   })
 
   it('throws when min is greater than max', () => {

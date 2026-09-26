@@ -123,6 +123,7 @@ const options = computed(() => ({
   precision: props.precision ?? defaults.precision,
   implicitUnits: props.implicitUnits ?? defaults.implicitUnits,
   defaultUnit: props.defaultUnit ?? defaults.defaultUnit,
+  customUnits: props.customUnits ?? defaults.customUnits,
   step: props.step ?? defaults.step,
   snapToStep: props.snapToStep ?? defaults.snapToStep,
   clamp: props.clamp ?? defaults.clamp,
@@ -145,9 +146,9 @@ watch(error, (code) => emit('error', code))
 
 const invalid = computed(() => error.value !== null)
 function messageFor(failure: ParseFailure) {
-  const { locale, min, max, displayUnits } = settings.value
+  const { locale, min, max, displayUnits, customUnits } = settings.value
   const overrides = messages.value === false ? undefined : messages.value
-  return formatErrorMessage(failure, { locale, min, max, units: displayUnits, overrides })
+  return formatErrorMessage(failure, { locale, min, max, units: displayUnits, customUnits, overrides })
 }
 const message = computed(() => (errorDetail.value === null || messages.value === false ? null : messageFor(errorDetail.value)))
 const baseId = `sdi-${useId()}`

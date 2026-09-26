@@ -70,7 +70,7 @@ Its output is shown and announced as is, without the leading `= `. The preview s
 | --- | --- |
 | <kbd>↑</kbd> / <kbd>↓</kbd> | Step by `step` (default 15min), snapping to multiples: `1h07` → `1h15` / `1h` |
 | <kbd>Shift</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> | Step by 1 hour, snapping to whole hours |
-| <kbd>PgUp</kbd> / <kbd>PgDn</kbd> | Step by 1 day, snapping to whole days |
+| <kbd>PgUp</kbd> / <kbd>PgDn</kbd> | Step by 1 day (as configured in [`customUnits`](./units#working-time)), snapping to whole days |
 | <kbd>Enter</kbd> | Normalize and show errors. The form still submits, unless a preset is highlighted in the open menu, in which case that preset is picked |
 | <kbd>Esc</kbd> | Close the presets menu, or revert to the last committed value. When reverting, the event only stops propagating if something was reverted, so closing a dialog still works |
 | <kbd>Alt</kbd> + <kbd>↓</kbd> | Open the presets menu |

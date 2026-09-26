@@ -30,6 +30,7 @@ A single trailing number takes the next smaller unit: `1h30` is 1h 30min and `1d
 
 - Only one trailing number is allowed: `1h 30 15` is a `missing_unit` error.
 - The "next smaller unit" depends on the precision. `1m 30` is 1m 30s with `precision="second"`, and a `missing_unit` error otherwise.
+- [Custom units](./units#implicit-units) never take the trailing number: it goes to the next smaller built-in unit.
 - Turn it off with `:implicit-units="false"`.
 
 ## Decimals

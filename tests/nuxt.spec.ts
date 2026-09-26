@@ -16,6 +16,13 @@ describe('Nuxt module plugin template', () => {
     expect(code).toContain(`{ ...{"validateOn":"blur"}, as: UInput, invalidProps: nuxtUi }`)
   })
 
+  it('serializes customUnits and rejects invalid ones at build time', () => {
+    const customUnits = { day: 28800, sprint: { seconds: 288000, aliases: ['sprints'] } }
+    expect(generatePluginCode({ customUnits })).toContain(JSON.stringify({ customUnits }))
+    expect(() => generatePluginCode({ customUnits: { hour: 1800 } })).toThrow(/^\[semantic-duration-input\] customUnits: /)
+    expect(() => generatePluginCode({ customUnits: { tick: Infinity } })).toThrow()
+  })
+
   it('rejects unsafe names', () => {
     expect(() => generatePluginCode({ as: "x'; alert(1)" })).toThrow()
     expect(() => generatePluginCode({ invalidProps: 'other' as never })).toThrow()

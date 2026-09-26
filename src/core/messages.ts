@@ -2,7 +2,7 @@ import { formatDuration } from './format'
 import type { DurationLocale, MessageKey, ParseErrorCode } from './locale'
 import { en } from './locales/en'
 import type { ParseFailure } from './parse'
-import type { UnitKey } from './units'
+import type { CustomUnits, UnitName } from './units'
 
 /** Replacement texts per message key, e.g. `{ empty: 'Required' }`. */
 export type ErrorMessages = Partial<Record<MessageKey, string>>
@@ -16,7 +16,9 @@ export interface ErrorMessageOptions {
   /** Upper bound in seconds, for `{max}`. */
   max?: number
   /** Units used to format the bounds. */
-  units?: UnitKey[]
+  units?: UnitName[]
+  /** Units of your own and other lengths for `day` and `week`, see `ParseOptions.customUnits`. */
+  customUnits?: CustomUnits
   /** Per-key replacements. They may use the same placeholders. */
   overrides?: ErrorMessages
 }
@@ -32,12 +34,12 @@ export interface ErrorMessageOptions {
  */
 export function formatErrorMessage(error: ParseErrorCode | ParseFailure, options: ErrorMessageOptions = {}): string {
   const failure: Omit<ParseFailure, 'ok'> = typeof error === 'string' ? { error } : error
-  const { locale = en, min, max, units, overrides } = options
+  const { locale = en, min, max, units, customUnits, overrides } = options
 
   const keys = messageKeys(failure.error, failure.suggestion !== undefined, min, max)
   const template = keys.map((key) => overrides?.[key]).find((text) => text !== undefined) ?? locale.messages[keys[0]]
 
-  const bound = (seconds: number | undefined) => (seconds === undefined ? '' : formatDuration(seconds, { locale, units }))
+  const bound = (seconds: number | undefined) => (seconds === undefined ? '' : formatDuration(seconds, { locale, units, customUnits }))
   const values: Record<string, () => string> = {
     min: () => bound(min),
     max: () => bound(max),

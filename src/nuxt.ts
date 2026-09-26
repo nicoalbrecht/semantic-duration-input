@@ -1,5 +1,6 @@
 import { addComponent, addImports, addPluginTemplate, defineNuxtModule } from '@nuxt/kit'
 import type { DurationInputDefaults } from './config'
+import { resolveUnits } from './core/units'
 
 const PACKAGE = 'semantic-duration-input'
 const PRESETS = ['nuxtUi', 'vuetify', 'primevue'] as const
@@ -25,6 +26,12 @@ export function generatePluginCode(options: ModuleOptions): string {
   if (as !== undefined && !/^[A-Za-z_$][\w$]*$/.test(as)) throw new Error(`[${PACKAGE}] \`as\` must be a component name, got "${as}"`)
   if (invalidProps !== undefined && !PRESETS.includes(invalidProps)) {
     throw new Error(`[${PACKAGE}] \`invalidProps\` must be one of ${PRESETS.join(', ')}, got "${invalidProps}"`)
+  }
+  // Fails the build instead of the page. It also rejects lengths like `Infinity`, which JSON would turn into `null`.
+  try {
+    resolveUnits(defaults.customUnits)
+  } catch (error) {
+    throw new Error(`[${PACKAGE}] ${(error as Error).message}`)
   }
   const imports = [
     `import { defineNuxtPlugin } from '#app'`,

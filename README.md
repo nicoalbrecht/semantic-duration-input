@@ -53,6 +53,7 @@ import 'semantic-duration-input/style.css'
 - **[Value formats](https://nicoalbrecht.github.io/semantic-duration-input/guide/value-formats):** minutes, seconds, milliseconds, ISO 8601 strings or your own conversion.
 - **[Behaviour](https://nicoalbrecht.github.io/semantic-duration-input/guide/behaviour):** configurable validation timing, normalization on blur, keyboard stepping, presets menu, live preview.
 - **[Locales](https://nicoalbrecht.github.io/semantic-duration-input/guide/locales):** add languages or unit names with `defineLocale`.
+- **[Custom units](https://nicoalbrecht.github.io/semantic-duration-input/guide/units):** units of your own (`2 sprints`) and working time (`1d` = 8h).
 - **[Forms](https://nicoalbrecht.github.io/semantic-duration-input/guide/forms):** native form submission, `validate()`, and `durationSchema()` for Standard Schema libraries.
 - **[Styling](https://nicoalbrecht.github.io/semantic-duration-input/guide/styling):** Tailwind v4, themable through `--sdi-*` tokens that fall back to shadcn-vue and Nuxt UI, classes per part, `unstyled`.
 - **[Integrations](https://nicoalbrecht.github.io/semantic-duration-input/guide/integrations):** render shadcn-vue, Nuxt UI, Vuetify, PrimeVue or any input through `as`, or go renderless.
