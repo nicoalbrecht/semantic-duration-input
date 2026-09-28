@@ -34,8 +34,8 @@ function llmsDocs(): Plugin {
     apply: 'build',
     generateBundle() {
       const files = buildLlmsFiles()
-      for (const fileName of ['llms.txt', 'llms-full.txt']) {
-        this.emitFile({ type: 'asset', fileName, source: files[fileName] })
+      for (const file of ['llms.txt', 'llms-full.txt']) {
+        this.emitFile({ type: 'asset', fileName: file, source: files[file] })
       }
     },
   }
