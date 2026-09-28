@@ -2,7 +2,7 @@
 
 A Vue 3 input that understands human-friendly durations and gives you **minutes** (or seconds, milliseconds or ISO 8601) via `v-model`.
 
-**[Documentation and live examples](https://nicoalbrecht.github.io/semantic-duration-input/)**
+**[Documentation and live examples](https://nicoalbrecht.github.io/semantic-duration-input/)** · **[npm](https://www.npmjs.com/package/semantic-duration-input)**
 
 | You type | `v-model` |
 | --- | --- |

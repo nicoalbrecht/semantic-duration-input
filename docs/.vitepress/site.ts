@@ -1,6 +1,7 @@
 import type { DefaultTheme } from 'vitepress'
 
 export const repo = 'https://github.com/nicoalbrecht/semantic-duration-input'
+export const npm = 'https://www.npmjs.com/package/semantic-duration-input'
 // Default branch, for the changelog and "edit this page" links.
 export const branch = 'main'
 export const base = '/semantic-duration-input/'

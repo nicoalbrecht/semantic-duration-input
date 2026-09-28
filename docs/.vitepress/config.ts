@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 import tailwindcss from '@tailwindcss/vite'
 import { writeLlmsFiles } from './llms'
-import { base, branch, repo, sidebar } from './site'
+import { base, branch, npm, repo, sidebar } from './site'
 
 export default defineConfig({
   title: 'Semantic Duration Input',
@@ -19,7 +19,10 @@ export default defineConfig({
     ],
     sidebar,
     search: { provider: 'local' },
-    socialLinks: [{ icon: 'github', link: repo }],
+    socialLinks: [
+      { icon: 'github', link: repo },
+      { icon: 'npm', link: npm },
+    ],
     editLink: { pattern: `${repo}/edit/${branch}/docs/:path`, text: 'Edit this page on GitHub' },
     footer: { message: 'Released under the MIT License.' },
   },
