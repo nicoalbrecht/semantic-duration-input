@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.3.1...v0.3.2) (2026-09-28)
+
+
+### Features
+
+* docs for AI coding agents (llms.txt, agent skill) ([#19](https://github.com/nicoalbrecht/semantic-duration-input/issues/19)) ([93fd364](https://github.com/nicoalbrecht/semantic-duration-input/commit/93fd364c7562afdc390d05cc36d5e9de679e8052))
+
 ## [0.3.1](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.3.0...v0.3.1) (2026-09-26)
 
 
