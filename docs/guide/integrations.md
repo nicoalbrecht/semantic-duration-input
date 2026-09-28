@@ -1,3 +1,7 @@
+---
+description: Render shadcn-vue, Nuxt UI, Vuetify, PrimeVue or any other input with as, the renderless slot, and app-wide defaults.
+---
+
 # Integrations
 
 ## Rendering another input with `as`

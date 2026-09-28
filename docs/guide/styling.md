@@ -1,3 +1,7 @@
+---
+description: Sizes, variants, the --sdi-* design tokens, classes per part through ui, unstyled mode and the tailwind-variants theme.
+---
+
 # Styling
 
 The built-in field is styled with Tailwind CSS v4 utilities. It follows your theme through a few CSS variables, and each variable falls back to the shadcn-vue and Nuxt UI tokens when those are present. See [Getting started](./getting-started#add-the-styles) for which stylesheet to import.

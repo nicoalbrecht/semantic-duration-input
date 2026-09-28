@@ -1,3 +1,7 @@
+---
+description: Store minutes, seconds, milliseconds, ISO 8601 strings or a custom format in v-model.
+---
+
 # Value formats
 
 The parser works in seconds. `valueFormat` decides what ends up in `v-model`:

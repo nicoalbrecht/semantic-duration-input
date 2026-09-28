@@ -2,7 +2,7 @@
 
 A Vue 3 input that understands human-friendly durations and gives you **minutes** (or seconds, milliseconds or ISO 8601) via `v-model`.
 
-**[Documentation and live examples](https://nicoalbrecht.github.io/semantic-duration-input/)**
+**[Documentation and live examples](https://nicoalbrecht.github.io/semantic-duration-input/)** · **[npm](https://www.npmjs.com/package/semantic-duration-input)**
 
 | You type | `v-model` |
 | --- | --- |
@@ -58,6 +58,12 @@ import 'semantic-duration-input/style.css'
 - **[Styling](https://nicoalbrecht.github.io/semantic-duration-input/guide/styling):** Tailwind v4, themable through `--sdi-*` tokens that fall back to shadcn-vue and Nuxt UI, classes per part, `unstyled`.
 - **[Integrations](https://nicoalbrecht.github.io/semantic-duration-input/guide/integrations):** render shadcn-vue, Nuxt UI, Vuetify, PrimeVue or any input through `as`, or go renderless.
 - **[Nuxt module](https://nicoalbrecht.github.io/semantic-duration-input/guide/nuxt)** and **[headless core](https://nicoalbrecht.github.io/semantic-duration-input/guide/headless)** (`semantic-duration-input/core`, no Vue needed).
+
+## AI coding agents
+
+- **Docs as Markdown:** [llms.txt](https://nicoalbrecht.github.io/semantic-duration-input/llms.txt) (key facts and an index) and [llms-full.txt](https://nicoalbrecht.github.io/semantic-duration-input/llms-full.txt) (every page in one file). Each docs page is also available with `.md` appended to its URL.
+- **Offline and version-matched:** the npm package ships both files in `node_modules/semantic-duration-input/dist/`.
+- **Agent skill:** `npx skills add nicoalbrecht/semantic-duration-input` installs [a skill](./skills/semantic-duration-input/SKILL.md) with setup recipes and the usual pitfalls. It's also in the npm package under `skills/`.
 
 Upgrading from 0.1? See [Migrating to 0.2](https://nicoalbrecht.github.io/semantic-duration-input/migration/0.2) and the [changelog](./CHANGELOG.md).
 

@@ -14,7 +14,8 @@
   },
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "main": "./dist/semantic-duration-input.js",
   "module": "./dist/semantic-duration-input.js",

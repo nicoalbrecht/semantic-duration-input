@@ -1,3 +1,7 @@
+---
+description: Accepted languages, the display style and units, and custom locales with defineLocale.
+---
+
 # Locales
 
 English and German are built in, and both are accepted by default. Two props control languages:

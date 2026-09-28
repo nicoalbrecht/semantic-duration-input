@@ -1,3 +1,7 @@
+---
+description: The Vue-free core entry for Node and the browser, and the useDurationInput composable.
+---
+
 # Headless usage
 
 ## Core

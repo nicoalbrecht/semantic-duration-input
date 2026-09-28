@@ -1,3 +1,7 @@
+---
+description: Units of your own (sprint, pomodoro) and working-time days and weeks with customUnits.
+---
+
 # Custom units
 
 `customUnits` adds units of your own and changes the length of `day` and `week`. Each entry is a length in seconds, or a definition with aliases and labels:

@@ -1,3 +1,7 @@
+---
+description: What the parser accepts. Units, compound values, implicit units, decimals, clock format, ISO 8601, typo suggestions and error codes.
+---
+
 # Syntax
 
 Case and extra whitespace are ignored everywhere.

@@ -4,6 +4,7 @@ import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import dts from 'vite-plugin-dts'
+import { buildLlmsFiles } from './docs/.vitepress/llms'
 
 const fileName = 'semantic-duration-input'
 
@@ -26,12 +27,27 @@ function tailwindEntry(): Plugin {
   }
 }
 
+/** Emits `dist/llms.txt` and `dist/llms-full.txt`, the docs for coding agents, matching this version. */
+function llmsDocs(): Plugin {
+  return {
+    name: 'sdi-llms-docs',
+    apply: 'build',
+    generateBundle() {
+      const files = buildLlmsFiles()
+      for (const file of ['llms.txt', 'llms-full.txt']) {
+        this.emitFile({ type: 'asset', fileName: file, source: files[file] })
+      }
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     vue(),
     tailwindcss(),
     dts({ include: ['src'], tsconfigPath: './tsconfig.json', rollupTypes: false }),
     tailwindEntry(),
+    llmsDocs(),
   ],
   build: {
     lib: {

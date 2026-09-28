@@ -1,3 +1,7 @@
+---
+description: Props, attributes, events, slots, exposed methods, plugin and types of DurationInput.
+---
+
 # Component
 
 ```ts
