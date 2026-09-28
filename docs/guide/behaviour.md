@@ -1,3 +1,7 @@
+---
+description: When v-model updates, when errors are shown (validateOn), the preview, keyboard stepping, snapping, clamping and presets.
+---
+
 # Behaviour
 
 ## Typing and committing

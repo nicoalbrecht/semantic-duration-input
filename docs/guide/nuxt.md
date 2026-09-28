@@ -1,3 +1,7 @@
+---
+description: The Nuxt module and its options.
+---
+
 # Nuxt
 
 Add the module. It:

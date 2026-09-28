@@ -1,3 +1,7 @@
+---
+description: parseDuration, formatDuration, formatErrorMessage, durationSchema, ISO 8601 and model value helpers, locales, constants and types.
+---
+
 # Core API
 
 ```ts

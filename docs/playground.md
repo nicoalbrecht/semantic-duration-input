@@ -1,4 +1,5 @@
 ---
+description: Try the options of DurationInput together.
 aside: false
 ---
 

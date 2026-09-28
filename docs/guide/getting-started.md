@@ -1,3 +1,7 @@
+---
+description: Install the package, add the styles, bind v-model and register the plugin.
+---
+
 # Getting started
 
 ## Install
@@ -64,3 +68,13 @@ The plugin registers `<DurationInput>` and optionally takes [app-wide defaults](
 | `semantic-duration-input/nuxt` | The [Nuxt module](./nuxt) |
 | `semantic-duration-input/style.css` | Prebuilt stylesheet |
 | `semantic-duration-input/tailwind.css` | Entry for Tailwind v4 projects |
+
+## For AI coding agents
+
+The docs are available as Markdown: [`llms.txt`](https://nicoalbrecht.github.io/semantic-duration-input/llms.txt) lists the key facts and pages, and [`llms-full.txt`](https://nicoalbrecht.github.io/semantic-duration-input/llms-full.txt) contains every page. Append `.md` to a page's URL for its Markdown version. The npm package ships both files for its version in `node_modules/semantic-duration-input/dist/`.
+
+To teach your agent the setup and the usual pitfalls, install the skill:
+
+```sh
+npx skills add nicoalbrecht/semantic-duration-input
+```

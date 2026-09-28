@@ -1,3 +1,7 @@
+---
+description: Native form submission, required, min and max, validate() on submit, error messages, and durationSchema for Standard Schema libraries and Zod.
+---
+
 # Forms and validation
 
 ## Native forms
