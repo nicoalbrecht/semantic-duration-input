@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.3.2...v0.3.3) (2026-09-29)
+
+
+### Features
+
+* built-in locales for zh, es, hi, fr, ar and pt ([#21](https://github.com/nicoalbrecht/semantic-duration-input/issues/21)) ([c02de44](https://github.com/nicoalbrecht/semantic-duration-input/commit/c02de4477e2a8efae1da5197819cf362ee934ba8))
+
 ## [0.3.2](https://github.com/nicoalbrecht/semantic-duration-input/compare/v0.3.1...v0.3.2) (2026-09-28)
 
 
