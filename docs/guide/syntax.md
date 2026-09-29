@@ -20,13 +20,35 @@ Seconds (only with `precision="second"`), minutes, hours, days and weeks. Months
 | day | `d` `day` `days` | `d` `t` `tag` `tage` `tagen` |
 | week | `w` `wk` `wks` `week` `weeks` | `w` `wo` `woche` `wochen` |
 
-Which names are accepted depends on the `locales` prop (both by default). To add a language or more names, see [Locales](./locales).
+The other built-in locales are accepted when you pass them in the `locales` prop, e.g. `:locales="[fr, en]"`. Each of them also accepts `h`, `m`, `min`, `s`, `d` and `w`.
+
+| Unit | Spanish (`es`) | French (`fr`) | Portuguese (`pt`) |
+| --- | --- | --- | --- |
+| second | `seg` `segs` `segundo` `segundos` | `sec` `secs` `seconde` `secondes` | `seg` `segs` `segundo` `segundos` |
+| minute | `mins` `minuto` `minutos` | `mn` `mins` `minute` `minutes` | `mins` `minuto` `minutos` |
+| hour | `hr` `hrs` `hora` `horas` | `heure` `heures` | `hr` `hrs` `hora` `horas` |
+| day | `día` `días` `dia` `dias` | `j` `jour` `jours` | `dia` `dias` |
+| week | `sem` `semana` `semanas` | `sem` `semaine` `semaines` | `sem` `semana` `semanas` |
+
+| Unit | Hindi (`hi`) | Arabic (`ar`) | Chinese (`zh`) |
+| --- | --- | --- | --- |
+| second | `से` `सेकंड` `सेकेंड` `सेकण्ड` | `ث` `ثانية` `ثانيتان` `ثوان` `ثواني` | `秒` `秒钟` |
+| minute | `मि` `मिनट` `मिनिट` | `د` `دقيقة` `دقيقتان` `دقائق` | `分` `分钟` `分鐘` |
+| hour | `घं` `घंटा` `घंटे` `घण्टा` `घण्टे` | `س` `ساعة` `ساعتان` `ساعات` | `时` `小时` `个小时` `钟头` `小時` `個小時` `鐘頭` |
+| day | `दि` `दिन` | `ي` `يوم` `يومان` `أيام` `يومًا` | `天` `日` |
+| week | `सप्ताह` `हफ़्ता` `हफ़्ते` | `أ` `أسبوع` `أسبوعان` `أسابيع` `أسبوعًا` | `周` `星期` `个星期` `礼拜` `週` `禮拜` |
+
+Arabic also accepts the forms after `ين` (`ساعتين`), and spellings without hamza or with `ه` for `ة` (`اسبوع`, `ساعه`).
+
+Which names are accepted depends on the `locales` prop (English and German by default). To add a language or more names, see [Locales](./locales).
 
 With the default minute precision, seconds are not a unit, so `30s` is an `unknown_unit` error.
 
 ## Compound values
 
-`1d 2h 30min`, `2d4h`, `1 hour, 30 minutes`. Parts can be separated by spaces, `,`, `+` or `&`, and by the separator words of the active locales (`and`, `und`). Unit names may end with a period, as in `2 Std. 30 Min.`
+`1d 2h 30min`, `2d4h`, `1 hour, 30 minutes`. Parts can be separated by spaces, `,`, `+` or `&`, and by the separator words of the active locales (`and`, `und`, `y`, `et`, `e`, `और`, `و`, `和`). Unit names may end with a period, as in `2 Std. 30 Min.`
+
+Chinese is written without spaces, so its separators (`和`, `又`, `零`) may be attached to the unit before them: `1小时零5分钟`. Chinese and Japanese separators in custom locales work the same way.
 
 ## Implicit units
 
@@ -40,6 +62,10 @@ A single trailing number takes the next smaller unit: `1h30` is 1h 30min and `1d
 ## Decimals
 
 `1.5h` or `1,5h`. Results are rounded to whole minutes, or to whole seconds with `precision="second"`.
+
+## Digits
+
+Besides `0`–`9`, Arabic-Indic (`٣٠`), Persian (`۳۰`), Devanagari (`३०`) and full-width digits (`３０`) are accepted, in every locale. So are the Arabic decimal separator `٫`, the commas `،` `、` `，`, and the full-width `：` and `＋`: `١٫٥ ساعة`, `１小时，３０分钟`, `１：３０`. Error tokens show the input as typed.
 
 ## Clock format
 

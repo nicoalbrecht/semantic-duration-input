@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatDuration } from '../src/core/format'
 import { parseDuration } from '../src/core/parse'
-import { de, defineLocale, en } from '../src/core'
+import { de, defineLocale, en, type DurationLocale } from '../src/core'
 
 describe('formatDuration', () => {
   it.each([
@@ -98,5 +98,28 @@ describe('formatDuration', () => {
     } finally {
       ;(Intl as any).DurationFormat = original
     }
+  })
+
+  it('picks long labels by the plural rules of the locale', () => {
+    const minutes = (locale: DurationLocale, value: number) => formatDuration(value * 60, { locale, style: 'long', units: ['minute'] })
+    expect([0, 1, 1.5, 2].map((value) => minutes(en, value))).toEqual(['0 minutes', '1 minute', '1.5 minutes', '2 minutes'])
+    const french = defineLocale({ ...en, code: 'fr', labels: { ...en.labels!, long: { ...en.labels!.long, minute: ['minute', 'minutes'] } } })
+    expect([0, 1, 1.5, 2].map((value) => minutes(french, value))).toEqual(['0 minute', '1 minute', '1.5 minute', '2 minutes'])
+  })
+
+  it('supports long labels per plural category', () => {
+    const welsh = defineLocale({
+      ...en,
+      code: 'cy',
+      labels: { ...en.labels!, long: { ...en.labels!.long, day: { one: 'diwrnod', two: 'ddiwrnod', other: 'diwrnod' } } },
+    })
+    expect(formatDuration(86400, { locale: welsh, style: 'long' })).toBe('1 diwrnod')
+    expect(formatDuration(2 * 86400, { locale: welsh, style: 'long' })).toBe('2 ddiwrnod')
+    expect(formatDuration(5 * 86400, { locale: welsh, style: 'long' })).toBe('5 diwrnod')
+  })
+
+  it('uses English plural rules for an invalid locale code', () => {
+    const odd = defineLocale({ ...en, code: 'not a locale!' })
+    expect(formatDuration(60, { locale: odd, style: 'long' })).toBe('1 minute')
   })
 })

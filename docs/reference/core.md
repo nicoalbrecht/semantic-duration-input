@@ -101,7 +101,8 @@ These convert between seconds and a `valueFormat`. They're used by the component
 
 | Export | |
 | --- | --- |
-| `en`, `de` | The built-in locales |
+| `en`, `de` | English and German, accepted by default |
+| `es`, `fr`, `pt`, `hi`, `ar`, `zh` | Spanish, French, Portuguese, Hindi, Arabic and Chinese. Pass them in `locales` to accept them, see [Built-in locales](../guide/locales#built-in-locales) |
 | `DEFAULT_LOCALES` | `[en, de]` |
 | `defineLocale(locale)` | Typed helper for custom locales, see [Custom locales](../guide/locales#custom-locales) |
 
@@ -121,6 +122,7 @@ These convert between seconds and a `valueFormat`. They're used by the component
 | `FormatOptions`, `FormatStyle` | `formatDuration` |
 | `ErrorMessageOptions`, `ErrorMessages`, `MessageKey` | `formatErrorMessage` and the `messages` prop |
 | `DurationLocale` | A locale |
+| `LongLabel`, `PluralLabels` | A long label: `[one, other]`, or `{ one?, two?, few?, many?, zero?, other }` per plural category |
 | `UnitKey`, `Precision` | `'second' \| 'minute' \| 'hour' \| 'day' \| 'week'`, `'minute' \| 'second'` |
 | `UnitName` | A `UnitKey` or the name of a custom unit |
 | `CustomUnits`, `CustomUnit` | `customUnits`, see [Custom units](../guide/units) |

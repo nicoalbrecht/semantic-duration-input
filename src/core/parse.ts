@@ -4,6 +4,7 @@ import { de } from './locales/de'
 import { en } from './locales/en'
 import { suggest } from './suggest'
 import {
+  foldName,
   nextSmallerBuiltIn,
   resolveUnits,
   unitSeconds,
@@ -72,17 +73,38 @@ const MAX_INPUT_LENGTH = 256
 
 const NUMBER = '\\d+(?:[.,]\\d+)?'
 const NUMBER_RE = new RegExp(`^${NUMBER}$`)
-// A unit word may end with a period (`2 Std.`), but not one that starts a decimal (`1h.5`).
-const TOKEN_RE = new RegExp(`(${NUMBER})\\s*(\\p{L}+)(?:\\.(?!\\d))?`, 'gu')
+// A unit word may end with a period (`2 Std.`), but not one that starts a decimal (`1h.5`). Marks after the
+// first letter belong to the word: Devanagari vowel signs (`घंटे`) and Arabic diacritics are marks.
+const TOKEN_RE = new RegExp(`(${NUMBER})\\s*(\\p{L}[\\p{L}\\p{M}]*)(?:\\.(?!\\d))?`, 'gu')
 const PART_RE = /[^\s,+&]+/g
+// Scripts written without spaces: a separator in them may be attached to the unit before it (`1小时零5分钟`).
+const UNSPACED_RE = /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]+$/u
 const CLOCK_RE = /^(\d+):([0-5]\d)$/
 const CLOCK_SECONDS_RE = /^(\d+):([0-5]\d):([0-5]\d)$/
 
 const toNumber = (text: string) => Number(text.replace(',', '.'))
 
+// Arabic-Indic, Persian, Devanagari and full-width digits: the code point of each zero.
+const DIGIT_ZEROS = [0x0660, 0x06f0, 0x0966, 0xff10]
+const PUNCTUATION: Record<string, string> = { '٫': '.', '،': ',', '、': ',', '，': ',', '：': ':', '＋': '+' }
+const NATIVE_RE = /[\u0660-\u0669\u06f0-\u06f9\u0966-\u096f\uff10-\uff19٫،、，：＋]/g
+
+/**
+ * Maps native and full-width digits and punctuation to ASCII (`٣٠` -> `30`, `，` -> `,`). Each character is
+ * replaced by exactly one, so indices into the result are indices into the input.
+ */
+function normalizeInput(text: string): string {
+  return text.replace(NATIVE_RE, (char) => {
+    const code = char.charCodeAt(0)
+    const zero = DIGIT_ZEROS.find((start) => code >= start && code <= start + 9)
+    return zero === undefined ? PUNCTUATION[char] : String(code - zero)
+  })
+}
+
 /**
  * Parses human-friendly duration text: units (`2h 30min`, `3 Tage`), implicit units (`1h30`),
- * decimals (`1,5h`), clock format (`1:30`) and ISO 8601 (`PT1H30M`).
+ * decimals (`1,5h`), clock format (`1:30`) and ISO 8601 (`PT1H30M`). Native digits (`٣٠`, `३०`) and
+ * full-width digits and punctuation (`１小时，３０分钟`) are read like their ASCII counterparts.
  *
  * @example
  * parseDuration('1h 30m')  // { ok: true, seconds: 5400, minutes: 90 }
@@ -94,12 +116,14 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
   const units = resolveUnits(options.customUnits)
   const defaultLength = options.defaultUnit && unitSeconds(options.defaultUnit, units, 'parseDuration')
   const offset = input.length - input.trimStart().length
-  const raw = input.trim()
-  if (raw === '') {
+  // `source` is what the user typed, for error tokens; `raw` has ASCII digits and punctuation, at the same indices.
+  const source = input.trim()
+  if (source === '') {
     return options.required ? { ok: false, error: 'empty' } : { ok: true, seconds: null, minutes: null }
   }
 
-  if (raw.length > MAX_INPUT_LENGTH) return { ok: false, error: 'invalid_format', token: raw, index: offset }
+  if (source.length > MAX_INPUT_LENGTH) return { ok: false, error: 'invalid_format', token: source, index: offset }
+  const raw = normalizeInput(source)
 
   const precision = options.precision ?? 'minute'
   let total = parseClock(raw, precision) ?? fromIso(raw)
@@ -107,7 +131,7 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
     total = toNumber(raw) * defaultLength
   }
   if (total === null) {
-    const result = parseTokens(raw, options, units)
+    const result = parseTokens(raw, source, options, units)
     if (typeof result !== 'number') {
       return result.index === undefined ? result : { ...result, index: result.index + offset }
     }
@@ -117,7 +141,7 @@ export function parseDuration(input: string, options: ParseOptions = {}): ParseR
   const granularity = UNIT_SECONDS[precision]
   const seconds = Math.round(total / granularity) * granularity
   // Absurdly long numbers overflow to Infinity or lose precision.
-  if (!Number.isSafeInteger(seconds)) return { ok: false, error: 'invalid_format', token: raw, index: offset }
+  if (!Number.isSafeInteger(seconds)) return { ok: false, error: 'invalid_format', token: source, index: offset }
   const { min, max } = options
   if ((min !== undefined && seconds < min) || (max !== undefined && seconds > max)) {
     return { ok: false, error: 'out_of_range' }
@@ -132,16 +156,24 @@ function parseClock(text: string, precision: Precision): number | null {
   return short ? Number(short[1]) * 3600 + Number(short[2]) * 60 : null
 }
 
-// Works on the raw text and lowercases single words for lookups: lowercasing the whole text can change
-// its length (e.g. "İ"), which would shift the reported indices.
-function parseTokens(raw: string, options: ParseOptions, resolved: ResolvedUnits): number | ParseFailure {
+// Works on the raw text and folds single words for lookups: lowercasing or normalizing the whole text can change
+// its length (e.g. "İ"), which would shift the reported indices. Error tokens are cut from `source`, as typed.
+function parseTokens(raw: string, source: string, options: ParseOptions, resolved: ResolvedUnits): number | ParseFailure {
   const locales = options.locales ?? DEFAULT_LOCALES
   const aliases = buildAliasMap(locales, unitsFor(options.precision, resolved), resolved)
-  const separators = new Set(locales.flatMap((locale) => locale.separators ?? []).map((word) => word.toLowerCase()))
+  const separators = new Set(locales.flatMap((locale) => locale.separators ?? []).map(foldName))
+  const attachable = [...separators].filter((separator) => UNSPACED_RE.test(separator))
+  /** The unit of `name`, also when an attachable separator follows it: `小时零` is `小时`. */
+  const lookup = (name: string) => {
+    const unit = aliases.get(name)
+    if (unit) return unit
+    const separator = attachable.find((word) => name.length > word.length && name.endsWith(word))
+    return separator === undefined ? undefined : aliases.get(name.slice(0, -separator.length))
+  }
   const fail = (error: ParseErrorCode, index: number, length: number, extra: Partial<ParseFailure> = {}): ParseFailure => ({
     ok: false,
     error,
-    token: raw.slice(index, index + length),
+    token: source.slice(index, index + length),
     index,
     ...extra,
   })
@@ -149,7 +181,7 @@ function parseTokens(raw: string, options: ParseOptions, resolved: ResolvedUnits
   /** Words between tokens that are neither separators nor anything else we understand. */
   const strayParts = (from: number, to: number) =>
     [...raw.slice(from, to).matchAll(PART_RE)]
-      .filter((part) => !separators.has(part[0].toLowerCase()))
+      .filter((part) => !separators.has(foldName(part[0])))
       .map((part) => ({ word: part[0], index: from + part.index }))
 
   let total = 0
@@ -162,10 +194,9 @@ function parseTokens(raw: string, options: ParseOptions, resolved: ResolvedUnits
 
     const word = match[2]
     const wordIndex = match.index + match[0].indexOf(word, match[1].length)
-    const unit = aliases.get(word.toLowerCase())
-    if (!unit) {
-      return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(word.toLowerCase(), aliases.keys()) })
-    }
+    const name = foldName(word)
+    const unit = lookup(name)
+    if (!unit) return fail('unknown_unit', wordIndex, word.length, { suggestion: suggest(name, aliases.keys()) })
 
     total += toNumber(match[1]) * resolved.seconds.get(unit)!
     cursor = match.index + match[0].length

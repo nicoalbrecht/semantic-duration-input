@@ -41,6 +41,11 @@ describe('customUnits: validation', () => {
     expect(() => formatDuration(60, { units: ['sprint'] })).toThrow('formatDuration: unknown unit "sprint"')
   })
 
+  it('allows names with combining marks', () => {
+    expect(seconds('2 कार्यदिवस', { workday: { seconds: 8 * HOUR, aliases: ['कार्यदिवस'] } })).toBe(16 * HOUR)
+    expect(formatDuration(8 * HOUR, { units: ['shift'], customUnits: { shift: { seconds: 8 * HOUR, labels: { short: 'पाली' } } } })).toBe('1पाली')
+  })
+
   it('allows labels ending with a period and ignores undefined entries', () => {
     expect(seconds('2 Arb.', { workday: { seconds: 8 * HOUR, labels: { short: 'Arb.' } }, sprint: undefined })).toBe(16 * HOUR)
     expect(parseDuration('1 sprint', { customUnits: { sprint: undefined } })).toMatchObject({ error: 'unknown_unit' })

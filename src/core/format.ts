@@ -1,4 +1,4 @@
-import type { DurationLocale } from './locale'
+import type { DurationLocale, LongLabel } from './locale'
 import { en } from './locales/en'
 import { isBuiltIn, resolveUnits, unitSeconds, type CustomUnits, type ResolvedUnits, type UnitKey, type UnitName } from './units'
 
@@ -75,10 +75,34 @@ function decompose(seconds: number, units: string[], resolved: ResolvedUnits): [
 function label(unit: string, value: number, style: FormatStyle, locale: DurationLocale, resolved: ResolvedUnits): string {
   const custom = resolved.definitions.get(unit)?.labels
   const fallback = isBuiltIn(unit) ? en.labels! : undefined
-  const long = locale.labels?.long[unit] ?? custom?.long ?? fallback?.long[unit] ?? [unit, unit]
+  const own = locale.labels?.long[unit] ?? custom?.long
+  const long = own ?? fallback?.long[unit] ?? [unit, unit]
   const short = locale.labels?.short[unit] ?? custom?.short ?? fallback?.short[unit]
   if (style === 'short' && short !== undefined) return `${value}${short}`
-  return `${value} ${long[value === 1 ? 0 : 1]}`
+  // English fallback labels follow English plural rules.
+  return `${value} ${pluralForm(long, value, own ? locale.code : 'en')}`
+}
+
+/** The form of a long label for `value`, by the plural rules of `code`: "1 minute", "0 minute" in French. */
+function pluralForm(label: LongLabel, value: number, code: string): string {
+  const category = pluralRules(code).select(value)
+  if (Array.isArray(label)) return label[category === 'one' ? 0 : 1]
+  return label[category] ?? label.other
+}
+
+const plurals = new Map<string, Intl.PluralRules>()
+/** Cached like the formatters below. An invalid `code` uses English rules instead of throwing. */
+function pluralRules(code: string): Intl.PluralRules {
+  let rules = plurals.get(code)
+  if (!rules) {
+    try {
+      rules = new Intl.PluralRules(code)
+    } catch {
+      rules = new Intl.PluralRules('en')
+    }
+    plurals.set(code, rules)
+  }
+  return rules
 }
 
 interface IntlDurationFormat {

@@ -15,7 +15,7 @@ hero:
 
 features:
   - title: Understands people
-    details: Units, compound values, decimals, "1:30", ISO 8601, English and German, and "did you mean hours?" for typos.
+    details: Units, compound values, decimals, "1:30", ISO 8601, eight built-in languages, and "did you mean hours?" for typos.
   - title: Any v-model format
     details: Minutes by default, or seconds, milliseconds, ISO 8601 strings or your own conversion.
   - title: Fits your design system
