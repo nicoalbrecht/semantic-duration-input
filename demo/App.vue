@@ -4,9 +4,15 @@ import InputText from 'primevue/inputtext'
 import { VTextField } from 'vuetify/components'
 import ShadcnInput from './shadcn/Input.vue'
 import {
+  ar,
   de,
   DurationInput,
   en,
+  es,
+  fr,
+  hi,
+  pt,
+  zh,
   parseDuration,
   primevue,
   vuetify,
@@ -19,7 +25,18 @@ import {
 
 const minutes = ref<number | null>(null)
 const error = ref<ParseErrorCode | null>(null)
-const localeCode = ref<'en' | 'de'>('en')
+const LOCALES = { en, de, es, fr, pt, hi, ar, zh }
+const LOCALE_NAMES: Record<keyof typeof LOCALES, string> = {
+  en: 'English',
+  de: 'Deutsch',
+  es: 'Español',
+  fr: 'Français',
+  pt: 'Português',
+  hi: 'हिन्दी',
+  ar: 'العربية',
+  zh: '中文',
+}
+const localeCode = ref<keyof typeof LOCALES>('en')
 const displayStyle = ref<FormatStyle>('short')
 const dark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 watchEffect(() => document.documentElement.classList.toggle('dark', dark.value))
@@ -84,19 +101,21 @@ const shared = ref<number | null>(90)
 
       <section class="space-y-4">
         <label for="duration" class="block text-sm font-medium">Duration</label>
-        <DurationInput
-          id="duration"
-          ref="input"
-          v-model="minutes"
-          size="lg"
-          preview
-          :locale="localeCode === 'de' ? de : en"
-          :display-style="displayStyle"
-          placeholder="e.g. 1h 30m"
-          @error="error = $event"
-        >
-          <template #leading>⏱</template>
-        </DurationInput>
+        <div :dir="localeCode === 'ar' ? 'rtl' : undefined">
+          <DurationInput
+            id="duration"
+            ref="input"
+            v-model="minutes"
+            size="lg"
+            preview
+            :locales="[LOCALES[localeCode], en]"
+            :display-style="displayStyle"
+            placeholder="e.g. 1h 30m"
+            @error="error = $event"
+          >
+            <template #leading>⏱</template>
+          </DurationInput>
+        </div>
 
         <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
           <dt class="font-medium">v-model</dt>
@@ -109,8 +128,9 @@ const shared = ref<number | null>(90)
           <legend class="px-1">Display</legend>
           <label><input v-model="displayStyle" type="radio" value="short" /> short</label>
           <label><input v-model="displayStyle" type="radio" value="long" /> long</label>
-          <label><input v-model="localeCode" type="radio" value="en" /> English</label>
-          <label><input v-model="localeCode" type="radio" value="de" /> Deutsch</label>
+          <label v-for="(label, code) in LOCALE_NAMES" :key="code">
+            <input v-model="localeCode" type="radio" :value="code" /> {{ label }}
+          </label>
         </fieldset>
 
         <ul class="grid gap-1 text-sm">

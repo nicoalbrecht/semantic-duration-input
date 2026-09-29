@@ -8,6 +8,7 @@ Key facts:
 - `v-model` holds whole minutes by default, and `null` when the field is empty. `valueFormat` switches it to `'seconds'`, `'ms'`, `'iso'` (`'PT1H30M'`) or a custom `{ toModel, fromModel }`.
 - Numeric `min`, `max`, `step` and `presets` are in the model's unit. Duration text such as `'8h'` works with every format.
 - The core functions work in seconds: `parseDuration` returns `{ ok: true, seconds, minutes }` or `{ ok: false, error, token?, index?, suggestion? }`, and `formatDuration`, `toIso` and the `min`/`max` parse options take seconds. They are also exported without Vue from `semantic-duration-input/core`.
+- Built-in locales: `en` and `de` are accepted by default. `es`, `fr`, `pt`, `hi`, `ar` and `zh` are exported too and must be passed in `locales` (e.g. `:locales="[fr, en]"`); the first one, or the `locale` prop, sets the language of the normalized text and error messages.
 - A bare number (`45`) is a `missing_unit` error unless `defaultUnit` is set. Seconds (`30s`) are only accepted with `precision="second"`.
 - Error codes: `empty`, `invalid_format`, `unknown_unit`, `missing_unit`, `out_of_range`.
 - Styles: with Tailwind v4, `@import 'semantic-duration-input/tailwind.css';` after `@import 'tailwindcss';`. Without Tailwind, `import 'semantic-duration-input/style.css'`. Neither is needed when rendering another input with `as` or through the renderless default slot.

@@ -51,12 +51,16 @@ export interface ResolvedUnits {
   definitions: ReadonlyMap<string, { names: string[]; labels?: CustomUnit['labels'] }>
 }
 
-const LETTERS = /^\p{L}+$/u
+// Letters, and marks after the first one: Devanagari vowel signs (`घंटे`) and Arabic diacritics are marks.
+const LETTERS = /^\p{L}[\p{L}\p{M}]*$/u
 // A label may end with a period (`Std.`), like unit words in the input.
-const LABEL = /^\p{L}+\.?$/u
+const LABEL = /^\p{L}[\p{L}\p{M}]*\.?$/u
 const OVERRIDABLE: UnitName[] = ['day', 'week']
 
 export const isBuiltIn = (unit: string): unit is UnitKey => unit in UNIT_SECONDS
+
+/** Form of a unit name or separator used for lookups: NFC, so composed and decomposed `फ़` match, and lowercase. */
+export const foldName = (name: string) => name.normalize('NFC').toLowerCase()
 
 const resolved = new WeakMap<CustomUnits, ResolvedUnits>()
 let builtIn: ResolvedUnits | undefined
@@ -92,7 +96,7 @@ function buildUnits(customUnits: CustomUnits): ResolvedUnits {
     const labelTexts = [labels?.short, ...(labels?.long ?? [])].filter((label) => label !== undefined)
     for (const label of labelTexts) if (!LABEL.test(label)) fail(`labels must be letters only, got "${label}"`)
 
-    const names = [...(isBuiltIn(unit) ? [] : [unit]), ...aliases, ...labelTexts].map((name) => name.replace(/\.$/, '').toLowerCase())
+    const names = [...(isBuiltIn(unit) ? [] : [unit]), ...aliases, ...labelTexts].map((name) => foldName(name.replace(/\.$/, '')))
     for (const name of names) {
       const owner = owners.get(name)
       if (owner !== undefined && owner !== unit) fail(`"${name}" is used by both ${owner} and ${unit}`)

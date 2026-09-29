@@ -24,6 +24,7 @@ The `.d.ts` files in `dist/` document every prop and option too.
 - The core functions work in **seconds**: `formatDuration(5400)` is `'1h 30min'`, and `parseDuration` returns `{ ok: true, seconds, minutes }`.
 - A bare number (`45`) is a `missing_unit` error. Set `default-unit="minute"` to accept it.
 - Seconds (`30s`, `1:02:03`) need `precision="second"`.
+- Only English and German unit names are accepted by default. For another built-in language (`es`, `fr`, `pt`, `hi`, `ar`, `zh`), pass it in `locales`, e.g. `:locales="[fr, en]"`. The first one sets the language of the normalized text and messages.
 - Errors are not shown while typing by default (`validateOn: 'eager'`): they appear on blur, Enter, or `validate()`.
 - The stylesheet is not injected automatically. Add one (see below) unless you render another input with `as` or use the renderless slot.
 

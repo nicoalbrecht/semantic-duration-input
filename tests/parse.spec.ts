@@ -193,3 +193,37 @@ describe('parseDuration – options', () => {
     expect(parseDuration('1h30', { implicitUnits: false })).toMatchObject({ ok: false, error: 'missing_unit' })
   })
 })
+
+describe('parseDuration – scripts and native digits', () => {
+  it('reads native and full-width digits and punctuation', () => {
+    expect(parseDuration('٢ h ٣٠ min')).toMatchObject({ ok: true, minutes: 150 })
+    expect(parseDuration('۱٫۵h')).toMatchObject({ ok: true, minutes: 90 })
+    expect(parseDuration('२h')).toMatchObject({ ok: true, minutes: 120 })
+    expect(parseDuration('１h，３０m')).toMatchObject({ ok: true, minutes: 90 })
+    expect(parseDuration('１：３０')).toMatchObject({ ok: true, minutes: 90 })
+    expect(parseDuration('1h＋30m、1d')).toMatchObject({ ok: true, minutes: 1530 })
+  })
+
+  it('reports errors at the typed position, with the typed text', () => {
+    expect(parseDuration(' ٣ foo')).toMatchObject({ error: 'unknown_unit', token: 'foo', index: 3 })
+    expect(parseDuration('١h ٤٥')).toMatchObject({ ok: true, minutes: 105 })
+    expect(parseDuration('٤٥', {})).toMatchObject({ error: 'missing_unit', token: '٤٥', index: 0 })
+    expect(parseDuration('2h ٤٥ ٦', {})).toMatchObject({ error: 'missing_unit', token: '٦', index: 6 })
+  })
+
+  it('reads unit words with combining marks, composed or not', () => {
+    const hi = defineLocale({ ...en, aliases: { hour: ['घंटे'], week: ['हफ़्ते'] }, separators: ['और'] })
+    expect(parseDuration('2 घंटे', { locales: [hi] })).toMatchObject({ ok: true, minutes: 120 })
+    // U+095E (composed फ़) and फ + nukta (U+092B U+093C) are the same letter.
+    expect(parseDuration('1 हफ़्ते', { locales: [hi] })).toMatchObject({ ok: true, minutes: 10080 })
+    expect(parseDuration('1 हफ़्ते', { locales: [hi] })).toMatchObject({ ok: true, minutes: 10080 })
+    expect(parseDuration('2 घंटो', { locales: [hi] })).toMatchObject({ error: 'unknown_unit', token: 'घंटो', index: 2 })
+  })
+
+  it('accepts separators attached to the unit only in scripts written without spaces', () => {
+    const zh = defineLocale({ ...en, aliases: { hour: ['小时'], minute: ['分钟'] }, separators: ['零'] })
+    expect(parseDuration('1小时零5分钟', { locales: [zh] })).toMatchObject({ ok: true, minutes: 65 })
+    expect(parseDuration('1小时 零 5分钟', { locales: [zh] })).toMatchObject({ ok: true, minutes: 65 })
+    expect(parseDuration('2 hand 30m')).toMatchObject({ error: 'unknown_unit', token: 'hand' })
+  })
+})

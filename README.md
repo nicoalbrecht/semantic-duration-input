@@ -49,7 +49,7 @@ import 'semantic-duration-input/style.css'
 
 ## Features
 
-- **[Syntax](https://nicoalbrecht.github.io/semantic-duration-input/guide/syntax):** units in English and German, compound values, `1h30`, decimals, `1:30`, ISO 8601, and "did you mean" suggestions for typos.
+- **[Syntax](https://nicoalbrecht.github.io/semantic-duration-input/guide/syntax):** units in English, German, Spanish, French, Portuguese, Hindi, Arabic and Chinese, compound values, `1h30`, decimals, `1:30`, ISO 8601, and "did you mean" suggestions for typos.
 - **[Value formats](https://nicoalbrecht.github.io/semantic-duration-input/guide/value-formats):** minutes, seconds, milliseconds, ISO 8601 strings or your own conversion.
 - **[Behaviour](https://nicoalbrecht.github.io/semantic-duration-input/guide/behaviour):** configurable validation timing, normalization on blur, keyboard stepping, presets menu, live preview.
 - **[Locales](https://nicoalbrecht.github.io/semantic-duration-input/guide/locales):** add languages or unit names with `defineLocale`.
